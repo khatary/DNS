@@ -59,7 +59,7 @@ public class MainActivity extends Activity {
                 startService(i);
             }});
         }
-        @android.webkit.JavascriptInterface public String appVersion() { return "1.0.0"; }
+        @android.webkit.JavascriptInterface public String appVersion() { return "1.1"; }
     }
 
     private void startVpn() {
