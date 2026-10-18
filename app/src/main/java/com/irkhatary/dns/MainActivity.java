@@ -31,7 +31,8 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(0xff050817);
         web.getSettings().setJavaScriptEnabled(true);
-        web.getSettings().setAllowFileAccess(false);
+        // Keep file access enabled only because the UI is bundled in android_asset;
+        // no untrusted remote pages are loaded in this WebView.
         web.getSettings().setDomStorageEnabled(false);
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient());
