@@ -3,6 +3,9 @@ on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
+concurrency:
+  group: ir-khatary-dns-build
+  cancel-in-progress: true
 permissions:
   contents: read
   actions: read
