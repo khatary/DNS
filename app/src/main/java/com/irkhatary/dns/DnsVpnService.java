@@ -23,8 +23,8 @@ public class DnsVpnService extends VpnService {
     public static final String ACTION_START = "com.irkhatary.dns.START";
     public static final String ACTION_STOP = "com.irkhatary.dns.STOP";
     public static final String ACTION_STATE = "com.irkhatary.dns.STATE";
-    private static final String DNS1 = "87.248.145.40";
-    private static final String DNS2 = "193.242.208.98";
+    private static final String DNS1 = "1.1.1.1";
+    private static final String DNS2 = "1.0.0.1";
     private static final String CHANNEL = "irkhatary_dns";
     private final AtomicBoolean running = new AtomicBoolean(false);
     private ParcelFileDescriptor tun;
@@ -45,7 +45,7 @@ public class DnsVpnService extends VpnService {
     private void startTunnel() {
         try {
             if (Build.VERSION.SDK_INT >= 26) {
-                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS", NotificationManager.IMPORTANCE_LOW);
+                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS 1.2", NotificationManager.IMPORTANCE_LOW);
                 ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);
             }
             Intent open = new Intent(this, MainActivity.class);
@@ -53,7 +53,7 @@ public class DnsVpnService extends VpnService {
             PendingIntent pi = PendingIntent.getActivity(this, 0, open, piFlags);
             Notification.Builder nb = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
             nb.setContentTitle("IR_Khatary DNS")
-              .setContentText("DNS محافظت‌شده فعال است")
+              .setContentText("DNS Cloudflare فعال است")
               .setSmallIcon(android.R.drawable.stat_sys_upload_done)
               .setContentIntent(pi)
               .setOngoing(true);
