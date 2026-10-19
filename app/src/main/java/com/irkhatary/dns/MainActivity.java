@@ -59,7 +59,22 @@ public class MainActivity extends Activity {
                 startService(i);
             }});
         }
-        @android.webkit.JavascriptInterface public String appVersion() { return "1.1"; }
+        @android.webkit.JavascriptInterface public void openFreeVpn() {
+            runOnUiThread(new Runnable() { @Override public void run() {
+                try {
+                    Intent app = getPackageManager().getLaunchIntentForPackage("ch.protonvpn.android");
+                    if (app != null) {
+                        startActivity(app);
+                    } else {
+                        Intent webIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://protonvpn.com/free-vpn"));
+                        startActivity(webIntent);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "برای VPN رایگان، Proton VPN را از وب‌سایت رسمی نصب کن", Toast.LENGTH_LONG).show();
+                }
+            }});
+        }
+        @android.webkit.JavascriptInterface public String appVersion() { return "1.2"; }
     }
 
     private void startVpn() {
