@@ -16,6 +16,8 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
     private static final int VPN_REQUEST = 701;
     private WebView web;
+    private String pendingPrimary = "1.1.1.1";
+    private String pendingSecondary = "1.0.0.1";
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (web != null) {
@@ -45,11 +47,12 @@ public class MainActivity extends Activity {
     }
 
     private class Bridge {
-        @android.webkit.JavascriptInterface public void connect() {
+        @android.webkit.JavascriptInterface public void connect(final String primary, final String secondary) {
             runOnUiThread(new Runnable() { @Override public void run() {
                 Intent prep = VpnService.prepare(MainActivity.this);
+                pendingPrimary = primary; pendingSecondary = secondary;
                 if (prep != null) startActivityForResult(prep, VPN_REQUEST);
-                else startVpn();
+                else startVpn(primary, secondary);
             }});
         }
         @android.webkit.JavascriptInterface public void disconnect() {
@@ -74,18 +77,20 @@ public class MainActivity extends Activity {
                 }
             }});
         }
-        @android.webkit.JavascriptInterface public String appVersion() { return "1.2"; }
+        @android.webkit.JavascriptInterface public String appVersion() { return "1.3"; }
     }
 
-    private void startVpn() {
+    private void startVpn(String primary, String secondary) {
         Intent i = new Intent(this, DnsVpnService.class);
         i.setAction(DnsVpnService.ACTION_START);
+        i.putExtra(DnsVpnService.EXTRA_DNS1, primary);
+        i.putExtra(DnsVpnService.EXTRA_DNS2, secondary);
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i);
     }
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == VPN_REQUEST) {
-            if (resultCode == RESULT_OK) startVpn();
+            if (resultCode == RESULT_OK) startVpn(pendingPrimary, pendingSecondary);
             else Toast.makeText(this, "برای اتصال باید مجوز VPN را تأیید کنید", Toast.LENGTH_LONG).show();
         }
     }
