@@ -57,7 +57,7 @@ public class DnsVpnService extends VpnService {
     private void startTunnel() {
         try {
             if (Build.VERSION.SDK_INT >= 26) {
-                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS 1.3", NotificationManager.IMPORTANCE_LOW);
+                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS 1.4", NotificationManager.IMPORTANCE_LOW);
                 ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);
             }
             Intent open = new Intent(this, MainActivity.class);
@@ -65,7 +65,7 @@ public class DnsVpnService extends VpnService {
             PendingIntent pi = PendingIntent.getActivity(this, 0, open, piFlags);
             Notification.Builder nb = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
             nb.setContentTitle("IR_Khatary DNS")
-              .setContentText("DNS Cloudflare فعال است")
+              .setContentText("DNS انتخاب‌شده فعال است")
               .setSmallIcon(android.R.drawable.stat_sys_upload_done)
               .setContentIntent(pi)
               .setOngoing(true);
