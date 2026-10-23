@@ -1,4 +1,5 @@
 name: Build Android APK
+# Rebuild release after configuring signing secrets (2026-10-23)
 on:
   push:
     branches: [ main, master ]
