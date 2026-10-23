@@ -23,8 +23,10 @@ public class DnsVpnService extends VpnService {
     public static final String ACTION_START = "com.irkhatary.dns.START";
     public static final String ACTION_STOP = "com.irkhatary.dns.STOP";
     public static final String ACTION_STATE = "com.irkhatary.dns.STATE";
-    private static final String DNS1 = "1.1.1.1";
-    private static final String DNS2 = "1.0.0.1";
+    public static final String EXTRA_DNS1 = "dns1";
+    public static final String EXTRA_DNS2 = "dns2";
+    private String activeDns1 = "1.1.1.1";
+    private String activeDns2 = "1.0.0.1";
     private static final String CHANNEL = "irkhatary_dns";
     private final AtomicBoolean running = new AtomicBoolean(false);
     private ParcelFileDescriptor tun;
@@ -38,8 +40,18 @@ public class DnsVpnService extends VpnService {
             stopSelf();
             return START_NOT_STICKY;
         }
-        if (!running.get()) startTunnel();
+        if (!running.get()) {
+            activeDns1 = validDns(intent == null ? null : intent.getStringExtra(EXTRA_DNS1), "1.1.1.1");
+            activeDns2 = validDns(intent == null ? null : intent.getStringExtra(EXTRA_DNS2), "1.0.0.1");
+            startTunnel();
+        }
         return START_STICKY;
+    }
+
+    private String validDns(String value, String fallback) {
+        if (value == null || !value.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")) return fallback;
+        try { for (String part : value.split("\\.")) if (Integer.parseInt(part) > 255) return fallback; return value; }
+        catch (Exception ignored) { return fallback; }
     }
 
     private void startTunnel() {
@@ -61,8 +73,8 @@ public class DnsVpnService extends VpnService {
 
             Builder b = new Builder().setSession("IR_Khatary DNS")
                     .addAddress("10.7.0.2", 32)
-                    .addDnsServer(DNS1).addDnsServer(DNS2)
-                    .addRoute(DNS1, 32).addRoute(DNS2, 32)
+                    .addDnsServer(activeDns1).addDnsServer(activeDns2)
+                    .addRoute(activeDns1, 32).addRoute(activeDns2, 32)
                     .setMtu(1500);
             tun = b.establish();
             if (tun == null) throw new IllegalStateException("VPN interface could not be established");
@@ -111,7 +123,7 @@ public class DnsVpnService extends VpnService {
             int udpLen = u16(p, ihl + 4);
             if (dstPort != 53 || udpLen < 8 || ihl + udpLen > p.length) return null;
             String target = ip(p, 16);
-            if (!DNS1.equals(target) && !DNS2.equals(target)) return null;
+            if (!activeDns1.equals(target) && !activeDns2.equals(target)) return null;
             byte[] query = new byte[udpLen - 8];
             System.arraycopy(p, ihl + 8, query, 0, query.length);
             DatagramSocket s = new DatagramSocket();
