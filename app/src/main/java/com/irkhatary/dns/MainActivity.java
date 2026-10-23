@@ -1,6 +1,6 @@
 package com.irkhatary.dns;
 
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,7 +13,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private static final int VPN_REQUEST = 701;
     private WebView web;
     private String pendingPrimary = "1.1.1.1";
@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
                 }
             }});
         }
-        @android.webkit.JavascriptInterface public String appVersion() { return "1.3"; }
+        @android.webkit.JavascriptInterface public String appVersion() { return "1.4"; }
     }
 
     private void startVpn(String primary, String secondary) {
