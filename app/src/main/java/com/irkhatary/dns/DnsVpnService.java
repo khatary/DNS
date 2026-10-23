@@ -57,7 +57,7 @@ public class DnsVpnService extends VpnService {
     private void startTunnel() {
         try {
             if (Build.VERSION.SDK_INT >= 26) {
-                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS 1.2", NotificationManager.IMPORTANCE_LOW);
+                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS 1.3", NotificationManager.IMPORTANCE_LOW);
                 ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);
             }
             Intent open = new Intent(this, MainActivity.class);
