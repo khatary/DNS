@@ -1,6 +1,6 @@
 package com.irkhatary.dns;
 
-import androidx.appcompat.app.AppCompatActivity;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,7 +13,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     private static final int VPN_REQUEST = 701;
     private WebView web;
     private String pendingPrimary = "1.1.1.1";
