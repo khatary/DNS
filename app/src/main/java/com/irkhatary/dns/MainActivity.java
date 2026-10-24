@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
         web.getSettings().setJavaScriptEnabled(true);
         // Keep file access enabled only because the UI is bundled in android_asset;
         // no untrusted remote pages are loaded in this WebView.
-        web.getSettings().setDomStorageEnabled(false);
+        web.getSettings().setDomStorageEnabled(true);
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient());
         web.addJavascriptInterface(new Bridge(), "AndroidApp");
