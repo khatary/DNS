@@ -12,12 +12,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * DNS-only VPN prototype. It forwards IPv4 UDP DNS queries to the configured resolvers.
- * This is not a full-device VPN: non-DNS traffic is intentionally not routed.
+ * DNS-only VPN. It forwards IPv4 and IPv6 UDP DNS queries to the selected resolvers.
+ * Other traffic is intentionally not routed through this service.
  */
 public class DnsVpnService extends VpnService {
     public static final String ACTION_START = "com.irkhatary.dns.START";
@@ -25,8 +27,8 @@ public class DnsVpnService extends VpnService {
     public static final String ACTION_STATE = "com.irkhatary.dns.STATE";
     public static final String EXTRA_DNS1 = "dns1";
     public static final String EXTRA_DNS2 = "dns2";
-    private String activeDns1 = "1.1.1.1";
-    private String activeDns2 = "1.0.0.1";
+    private String activeDns1 = "208.67.222.222";
+    private String activeDns2 = "208.67.220.220";
     private static final String CHANNEL = "irkhatary_dns";
     private final AtomicBoolean running = new AtomicBoolean(false);
     private ParcelFileDescriptor tun;
@@ -41,17 +43,21 @@ public class DnsVpnService extends VpnService {
             return START_NOT_STICKY;
         }
         if (!running.get()) {
-            activeDns1 = validDns(intent == null ? null : intent.getStringExtra(EXTRA_DNS1), "1.1.1.1");
-            activeDns2 = validDns(intent == null ? null : intent.getStringExtra(EXTRA_DNS2), "1.0.0.1");
+            activeDns1 = validDns(intent == null ? null : intent.getStringExtra(EXTRA_DNS1), "208.67.222.222");
+            activeDns2 = validDns(intent == null ? null : intent.getStringExtra(EXTRA_DNS2), "208.67.220.220");
             startTunnel();
         }
         return START_STICKY;
     }
 
     private String validDns(String value, String fallback) {
-        if (value == null || !value.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")) return fallback;
-        try { for (String part : value.split("\\.")) if (Integer.parseInt(part) > 255) return fallback; return value; }
-        catch (Exception ignored) { return fallback; }
+        try {
+            if (value == null || !(value.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$") || value.matches("^[0-9a-fA-F:]+$"))) return fallback;
+            InetAddress parsed = InetAddress.getByName(value);
+            if (!(parsed instanceof Inet4Address) && !(parsed instanceof Inet6Address)) return fallback;
+            if (value.indexOf(':') < 0 && value.split("\\.").length != 4) return fallback;
+            return parsed.getHostAddress() == null ? fallback : value;
+        } catch (Exception ignored) { return fallback; }
     }
 
     private void startTunnel() {
@@ -65,16 +71,20 @@ public class DnsVpnService extends VpnService {
             PendingIntent pi = PendingIntent.getActivity(this, 0, open, piFlags);
             Notification.Builder nb = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
             nb.setContentTitle("IR_Khatary DNS")
-              .setContentText("DNS انتخاب‌شده فعال است")
+              .setContentText("DNS profile is active")
               .setSmallIcon(android.R.drawable.stat_sys_upload_done)
               .setContentIntent(pi)
               .setOngoing(true);
             startForeground(4107, nb.build());
 
+            InetAddress dns1 = InetAddress.getByName(activeDns1);
+            InetAddress dns2 = InetAddress.getByName(activeDns2);
             Builder b = new Builder().setSession("IR_Khatary DNS")
                     .addAddress("10.7.0.2", 32)
-                    .addDnsServer(activeDns1).addDnsServer(activeDns2)
-                    .addRoute(activeDns1, 32).addRoute(activeDns2, 32)
+                    .addAddress("fd00:7::2", 128)
+                    .addDnsServer(dns1).addDnsServer(dns2)
+                    .addRoute(dns1, dns1 instanceof Inet6Address ? 128 : 32)
+                    .addRoute(dns2, dns2 instanceof Inet6Address ? 128 : 32)
                     .setMtu(1500);
             tun = b.establish();
             if (tun == null) throw new IllegalStateException("VPN interface could not be established");
@@ -115,38 +125,75 @@ public class DnsVpnService extends VpnService {
 
     private byte[] handleDns(byte[] p) {
         try {
-            if (p.length < 28 || ((p[0] >> 4) & 15) != 4 || (p[9] & 255) != 17) return null;
+            if (p.length < 1) return null;
+            int version = (p[0] >> 4) & 15;
+            if (version == 4) return handleIpv4Dns(p);
+            if (version == 6) return handleIpv6Dns(p);
+            return null;
+        } catch (Exception ignored) { return null; }
+    }
+
+    private byte[] handleIpv4Dns(byte[] p) {
+        try {
+            if (p.length < 28 || (p[9] & 255) != 17) return null;
             int ihl = (p[0] & 15) * 4;
             if (ihl < 20 || p.length < ihl + 8) return null;
             int srcPort = u16(p, ihl);
             int dstPort = u16(p, ihl + 2);
             int udpLen = u16(p, ihl + 4);
             if (dstPort != 53 || udpLen < 8 || ihl + udpLen > p.length) return null;
-            String target = ip(p, 16);
-            if (!activeDns1.equals(target) && !activeDns2.equals(target)) return null;
-            byte[] query = new byte[udpLen - 8];
-            System.arraycopy(p, ihl + 8, query, 0, query.length);
-            DatagramSocket s = new DatagramSocket();
-            try {
-                if (!protect(s)) return null;
-                s.setSoTimeout(2500);
-                InetAddress server = InetAddress.getByName(target);
-                s.send(new DatagramPacket(query, query.length, server, 53));
-                byte[] ans = new byte[4096];
-                DatagramPacket reply = new DatagramPacket(ans, ans.length);
-                s.receive(reply);
-                byte[] dns = new byte[reply.getLength()];
-                System.arraycopy(ans, 0, dns, 0, dns.length);
-                return makePacket(p, srcPort, dns);
-            } finally {
-                s.close();
-            }
-        } catch (Exception e) {
+            InetAddress target = InetAddress.getByAddress(copyRange(p, 16, 4));
+            if (!isActiveTarget(target)) return null;
+            byte[] query = copyRange(p, ihl + 8, udpLen - 8);
+            byte[] dns = forwardQuery(query, target);
+            return dns == null ? null : makeIpv4Packet(p, srcPort, dns);
+        } catch (Exception ignored) { return null; }
+    }
+
+    private byte[] handleIpv6Dns(byte[] p) {
+        try {
+            if (p.length < 48 || (p[6] & 255) != 17) return null; // UDP directly follows the IPv6 header.
+            int payloadLen = u16(p, 4);
+            if (payloadLen < 8 || 40 + payloadLen > p.length) return null;
+            int srcPort = u16(p, 40);
+            int dstPort = u16(p, 42);
+            int udpLen = u16(p, 44);
+            if (dstPort != 53 || udpLen < 8 || udpLen > payloadLen || 40 + udpLen > p.length) return null;
+            InetAddress target = InetAddress.getByAddress(copyRange(p, 24, 16));
+            if (!(target instanceof Inet6Address) || !isActiveTarget(target)) return null;
+            byte[] query = copyRange(p, 48, udpLen - 8);
+            byte[] dns = forwardQuery(query, target);
+            return dns == null ? null : makeIpv6Packet(p, srcPort, dns);
+        } catch (Exception ignored) { return null; }
+    }
+
+    private byte[] forwardQuery(byte[] query, InetAddress target) {
+        DatagramSocket s = null;
+        try {
+            s = new DatagramSocket();
+            if (!protect(s)) return null;
+            s.setSoTimeout(3000);
+            s.send(new DatagramPacket(query, query.length, target, 53));
+            byte[] ans = new byte[4096];
+            DatagramPacket reply = new DatagramPacket(ans, ans.length);
+            s.receive(reply);
+            byte[] dns = new byte[reply.getLength()];
+            System.arraycopy(ans, 0, dns, 0, dns.length);
+            return dns;
+        } catch (Exception ignored) {
             return null;
+        } finally {
+            if (s != null) s.close();
         }
     }
 
-    private byte[] makePacket(byte[] original, int srcPort, byte[] dns) {
+    private boolean isActiveTarget(InetAddress target) {
+        try {
+            return target.equals(InetAddress.getByName(activeDns1)) || target.equals(InetAddress.getByName(activeDns2));
+        } catch (Exception ignored) { return false; }
+    }
+
+    private byte[] makeIpv4Packet(byte[] original, int srcPort, byte[] dns) {
         int total = 20 + 8 + dns.length;
         byte[] r = new byte[total];
         r[0] = 0x45;
@@ -163,33 +210,71 @@ public class DnsVpnService extends VpnService {
         put16(r, 24, 8 + dns.length);
         put16(r, 26, 0);
         System.arraycopy(dns, 0, r, 28, dns.length);
-        int c = udpChecksum(r);
+        int c = udpChecksumIpv4(r);
         put16(r, 26, c == 0 ? 0xffff : c);
         return r;
     }
 
-    private int udpChecksum(byte[] p) {
+    private byte[] makeIpv6Packet(byte[] original, int srcPort, byte[] dns) {
+        int udpLen = 8 + dns.length;
+        byte[] r = new byte[40 + udpLen];
+        r[0] = 0x60;
+        put16(r, 4, udpLen);
+        r[6] = 17;
+        r[7] = 64;
+        System.arraycopy(original, 24, r, 8, 16);
+        System.arraycopy(original, 8, r, 24, 16);
+        put16(r, 40, 53);
+        put16(r, 42, srcPort);
+        put16(r, 44, udpLen);
+        put16(r, 46, 0);
+        System.arraycopy(dns, 0, r, 48, dns.length);
+        put16(r, 46, udpChecksumIpv6(r) == 0 ? 0xffff : udpChecksumIpv6(r));
+        return r;
+    }
+
+    private int udpChecksumIpv4(byte[] p) {
         long sum = 0;
         for (int i = 12; i < 20; i += 2) sum += u16(p, i);
         sum += 17;
         sum += u16(p, 24);
         for (int i = 20; i < p.length; i += 2)
             sum += ((p[i] & 255) << 8) | (i + 1 < p.length ? p[i + 1] & 255 : 0);
-        while ((sum >> 16) != 0) sum = (sum & 0xffff) + (sum >> 16);
-        return (int)(~sum) & 0xffff;
+        return finishChecksum(sum);
+    }
+
+    private int udpChecksumIpv6(byte[] p) {
+        long sum = 0;
+        for (int i = 8; i < 40; i += 2) sum += u16(p, i);
+        int udpLen = u16(p, 44);
+        sum += (udpLen >> 16) & 0xffff;
+        sum += udpLen & 0xffff;
+        sum += 17;
+        for (int i = 40; i < p.length; i += 2)
+            sum += ((p[i] & 255) << 8) | (i + 1 < p.length ? p[i + 1] & 255 : 0);
+        return finishChecksum(sum);
     }
 
     private int checksum(byte[] b, int off, int len) {
         long sum = 0;
         for (int i = off; i < off + len; i += 2)
             sum += ((b[i] & 255) << 8) | (i + 1 < off + len ? b[i + 1] & 255 : 0);
+        return finishChecksum(sum);
+    }
+
+    private int finishChecksum(long sum) {
         while ((sum >> 16) != 0) sum = (sum & 0xffff) + (sum >> 16);
         return (int)(~sum) & 0xffff;
     }
 
+    private byte[] copyRange(byte[] source, int offset, int length) {
+        byte[] result = new byte[length];
+        System.arraycopy(source, offset, result, 0, length);
+        return result;
+    }
+
     private int u16(byte[] b, int i) { return ((b[i] & 255) << 8) | (b[i + 1] & 255); }
     private void put16(byte[] b, int i, int v) { b[i] = (byte)(v >> 8); b[i + 1] = (byte)v; }
-    private String ip(byte[] b, int i) { return (b[i] & 255) + "." + (b[i+1] & 255) + "." + (b[i+2] & 255) + "." + (b[i+3] & 255); }
 
     private void stopTunnel() {
         running.set(false);
