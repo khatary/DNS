@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends Activity {
     private static final int VPN_REQUEST = 701;
     private WebView web;
-    private final ExecutorService scanner = Executors.newFixedThreadPool(8);
+    private final ExecutorService scanner = Executors.newFixedThreadPool(3);
     private String pendingPrimary = "1.1.1.1";
     private String pendingSecondary = "1.0.0.1";
     private static final String CHANNEL_ID = "irkhatary_dns_status";
@@ -129,7 +129,7 @@ public class MainActivity extends Activity {
                         0x07,'e','x','a','m','p','l','e',0x03,'c','o','m',0x00, 0x00,0x01, 0x00,0x01
                     };
                     socket = new DatagramSocket();
-                    socket.setSoTimeout(1800);
+                    socket.setSoTimeout(900);
                     socket.send(new DatagramPacket(q, q.length, server, 53));
                     byte[] answer = new byte[1500];
                     DatagramPacket reply = new DatagramPacket(answer, answer.length);
