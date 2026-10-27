@@ -119,6 +119,17 @@ public class MainActivity extends Activity {
         }
         @android.webkit.JavascriptInterface public String appVersion() { return "1.5"; }
         @android.webkit.JavascriptInterface public void openTelegram() { runOnUiThread(new Runnable() { @Override public void run() { try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/IR_Khatary_DNS"))); } catch (Exception ignored) {} }}); }
+        @android.webkit.JavascriptInterface public void openUrl(final String url) {
+            runOnUiThread(new Runnable() { @Override public void run() {
+                try {
+                    android.net.Uri uri = android.net.Uri.parse(url);
+                    String host = uri.getHost();
+                    if (host != null && (host.equals("instagram.com") || host.equals("www.instagram.com") || host.equals("t.me") || host.equals("rubika.ir") || host.equals("www.rubika.ir"))) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    }
+                } catch (Exception ignored) {}
+            }});
+        }
     }
 
     private String JSONObjectQuote(String value) { return "\"" + value.replace("\\\\", "\\\\\\\\").replace("\"", "\\\\\"") + "\""; }
