@@ -82,7 +82,7 @@ $apply.Add_Click({
         } else {
             Set-DnsClientServerAddress -InterfaceAlias $name -ServerAddresses $servers
             Clear-DnsClientCache
-            $status.Text = "DNS applied to $name: $($servers -join ', '). This is DNS, not VPN."
+            $status.Text = "DNS applied to ${name}: $($servers -join ', '). This is DNS, not VPN."
         }
     } catch {
         $status.Text = "Error: $($_.Exception.Message). Run PowerShell as Administrator."
