@@ -121,7 +121,9 @@ public class MainActivity extends Activity {
         @android.webkit.JavascriptInterface public void openTelegram() { runOnUiThread(new Runnable() { @Override public void run() { try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/IR_Khatary_DNS"))); } catch (Exception ignored) {} }}); }
     }
 
-    private String JSONObjectQuote(String value) { return "\\"" + value.replace("\\\\", "\\\\\\\\").replace("\\"", "\\\\\\"") + "\\""; }\n\n    private void startVpn(String primary, String secondary) {
+    private String JSONObjectQuote(String value) { return "\"" + value + "\""; }
+
+    private void startVpn(String primary, String secondary) {
         Intent i = new Intent(this, DnsVpnService.class);
         i.setAction(DnsVpnService.ACTION_START);
         i.putExtra(DnsVpnService.EXTRA_DNS1, primary);
