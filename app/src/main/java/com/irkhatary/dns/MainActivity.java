@@ -1,6 +1,10 @@
 package com.irkhatary.dns;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +12,9 @@ import android.content.IntentFilter;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Bundle;
+import android.content.pm.PackageManager;
+import android.Manifest;
+import android.view.WindowManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -24,12 +31,16 @@ public class MainActivity extends Activity {
     private final ExecutorService scanner = Executors.newFixedThreadPool(8);
     private String pendingPrimary = "1.1.1.1";
     private String pendingSecondary = "1.0.0.1";
+    private static final String CHANNEL_ID = "irkhatary_dns_status";
+    private static final int NOTIFICATION_ID = 8152;
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (web != null) {
-                String js = "window.setVpnState(" + intent.getBooleanExtra("connected", false) + "," + intent.getLongExtra("elapsed", 0L) + ")";
+                boolean isConnected = intent.getBooleanExtra("connected", false);
+                String js = "window.setVpnState(" + isConnected + "," + intent.getLongExtra("elapsed", 0L) + ")";
                 if (Build.VERSION.SDK_INT >= 19) web.evaluateJavascript(js, null);
                 else web.loadUrl("javascript:" + js);
+                if (getPreferences(MODE_PRIVATE).getBoolean("notifications_enabled", false)) showStatusNotification(isConnected);
             }
         }
     };
@@ -53,6 +64,25 @@ public class MainActivity extends Activity {
     }
 
     public class Bridge {
+        @android.webkit.JavascriptInterface public void setGameOptimization(final boolean enabled) {
+            runOnUiThread(new Runnable() { @Override public void run() {
+                getPreferences(MODE_PRIVATE).edit().putBoolean("game_optimization", enabled).apply();
+                if (enabled) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }});
+        }
+        @android.webkit.JavascriptInterface public void setNotificationsEnabled(final boolean enabled) {
+            getPreferences(MODE_PRIVATE).edit().putBoolean("notifications_enabled", enabled).apply();
+            if (enabled && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                runOnUiThread(new Runnable() { @Override public void run() {
+                    requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 702);
+                }});
+            }
+            if (!enabled) {
+                NotificationManager nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                if (nm != null) nm.cancel(NOTIFICATION_ID);
+            }
+        }
         @android.webkit.JavascriptInterface public void connect(final String primary, final String secondary) {
             runOnUiThread(new Runnable() { @Override public void run() {
                 Intent prep = VpnService.prepare(MainActivity.this);
@@ -129,6 +159,28 @@ public class MainActivity extends Activity {
                     }
                 } catch (Exception ignored) {}
             }});
+        }
+    }
+
+    private void showStatusNotification(boolean connected) {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
+        NotificationManager nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        if (nm == null) return;
+        if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(new NotificationChannel(CHANNEL_ID, "DNS connection status", NotificationManager.IMPORTANCE_LOW));
+        Intent launch = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, launch, (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0) | PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL_ID) : new Notification.Builder(this);
+        builder.setSmallIcon(com.irkhatary.dns.R.drawable.irk_icon)
+                .setContentTitle("IR_Khatary DNS")
+                .setContentText(connected ? "DNS connected" : "DNS disconnected")
+                .setContentIntent(pi).setAutoCancel(true);
+        nm.notify(NOTIFICATION_ID, builder.build());
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 702 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (getPreferences(MODE_PRIVATE).getBoolean("notifications_enabled", false)) showStatusNotification(false);
         }
     }
 
