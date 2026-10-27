@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <queries><package android:name="ch.protonvpn.android" /></queries>
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application android:icon="@drawable/irk_icon" android:roundIcon="@drawable/irk_icon" android:allowBackup="false" android:usesCleartextTraffic="false" android:label="IR_Khatary DNS" android:theme="@android:style/Theme.Holo.NoActionBar" android:supportsRtl="true">
