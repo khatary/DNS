@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
         else registerReceiver(stateReceiver, filter);
     }
 
-    private class Bridge {
+    public class Bridge {
         @android.webkit.JavascriptInterface public void connect(final String primary, final String secondary) {
             runOnUiThread(new Runnable() { @Override public void run() {
                 Intent prep = VpnService.prepare(MainActivity.this);
@@ -121,7 +121,7 @@ public class MainActivity extends Activity {
         @android.webkit.JavascriptInterface public void openTelegram() { runOnUiThread(new Runnable() { @Override public void run() { try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/IR_Khatary_DNS"))); } catch (Exception ignored) {} }}); }
     }
 
-    private String JSONObjectQuote(String value) { return "\"" + value + "\""; }
+    private String JSONObjectQuote(String value) { return "\"" + value.replace("\\\\", "\\\\\\\\").replace("\"", "\\\\\"") + "\""; }
 
     private void startVpn(String primary, String secondary) {
         Intent i = new Intent(this, DnsVpnService.class);
