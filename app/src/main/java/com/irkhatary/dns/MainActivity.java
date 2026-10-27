@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.content.pm.PackageManager;
 import android.Manifest;
 import android.view.WindowManager;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -53,6 +54,8 @@ public class MainActivity extends Activity {
         // Keep file access enabled only because the UI is bundled in android_asset;
         // no untrusted remote pages are loaded in this WebView.
         web.getSettings().setDomStorageEnabled(true);
+        web.setLongClickable(false);
+        web.setOnLongClickListener(new View.OnLongClickListener() { @Override public boolean onLongClick(View v) { return true; } });
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient());
         web.addJavascriptInterface(new Bridge(), "AndroidApp");
