@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends Activity {
     private static final int VPN_REQUEST = 701;
     private WebView web;
-    private final ExecutorService scanner = Executors.newSingleThreadExecutor();
+    private final ExecutorService scanner = Executors.newFixedThreadPool(8);
     private String pendingPrimary = "1.1.1.1";
     private String pendingSecondary = "1.0.0.1";
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
