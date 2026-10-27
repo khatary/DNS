@@ -12,10 +12,16 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     private static final int VPN_REQUEST = 701;
     private WebView web;
+    private final ExecutorService scanner = Executors.newSingleThreadExecutor();
     private String pendingPrimary = "1.1.1.1";
     private String pendingSecondary = "1.0.0.1";
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
@@ -77,11 +83,45 @@ public class MainActivity extends Activity {
                 }
             }});
         }
+        @android.webkit.JavascriptInterface public void scanDns(final String address) {
+            scanner.execute(new Runnable() { @Override public void run() {
+                long start = android.os.SystemClock.elapsedRealtime();
+                boolean ok = false;
+                int latency = -1;
+                DatagramSocket socket = null;
+                try {
+                    InetAddress server = InetAddress.getByName(address);
+                    byte[] q = new byte[] {
+                        0x49,0x52, 0x01,0x00, 0x00,0x01, 0x00,0x00, 0x00,0x00, 0x00,0x00,
+                        0x07,'e','x','a','m','p','l','e',0x03,'c','o','m',0x00, 0x00,0x01, 0x00,0x01
+                    };
+                    socket = new DatagramSocket();
+                    socket.setSoTimeout(1800);
+                    socket.send(new DatagramPacket(q, q.length, server, 53));
+                    byte[] answer = new byte[1500];
+                    DatagramPacket reply = new DatagramPacket(answer, answer.length);
+                    socket.receive(reply);
+                    if (reply.getLength() >= 12 && answer[0] == 0x49 && answer[1] == 0x52
+                            && (answer[2] & 0x80) != 0) {
+                        ok = true;
+                        latency = (int)(android.os.SystemClock.elapsedRealtime() - start);
+                    }
+                } catch (Exception ignored) {
+                    ok = false;
+                } finally { if (socket != null) socket.close(); }
+                final boolean result = ok;
+                final int ms = latency;
+                final String addr = address;
+                runOnUiThread(new Runnable() { @Override public void run() {
+                    if (web != null) web.evaluateJavascript("window.onDnsScanResult(" + JSONObjectQuote(addr) + "," + result + "," + ms + ")", null);
+                }});
+            }});
+        }
         @android.webkit.JavascriptInterface public String appVersion() { return "1.5"; }
         @android.webkit.JavascriptInterface public void openTelegram() { runOnUiThread(new Runnable() { @Override public void run() { try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/IR_Khatary_DNS"))); } catch (Exception ignored) {} }}); }
     }
 
-    private void startVpn(String primary, String secondary) {
+    private String JSONObjectQuote(String value) { return "\\"" + value.replace("\\\\", "\\\\\\\\").replace("\\"", "\\\\\\"") + "\\""; }\n\n    private void startVpn(String primary, String secondary) {
         Intent i = new Intent(this, DnsVpnService.class);
         i.setAction(DnsVpnService.ACTION_START);
         i.putExtra(DnsVpnService.EXTRA_DNS1, primary);
