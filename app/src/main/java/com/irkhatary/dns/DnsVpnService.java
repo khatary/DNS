@@ -70,10 +70,15 @@ public class DnsVpnService extends VpnService {
             int piFlags = Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0;
             PendingIntent pi = PendingIntent.getActivity(this, 0, open, piFlags);
             Notification.Builder nb = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
+            Intent stop = new Intent(this, DnsVpnService.class);
+            stop.setAction(ACTION_STOP);
+            PendingIntent stopPi = PendingIntent.getService(this, 4108, stop,
+                    (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0) | PendingIntent.FLAG_UPDATE_CURRENT);
             nb.setContentTitle("IR_Khatary DNS")
               .setContentText("DNS profile is active")
               .setSmallIcon(android.R.drawable.stat_sys_upload_done)
               .setContentIntent(pi)
+              .addAction(android.R.drawable.ic_media_pause, "قطع اتصال", stopPi)
               .setOngoing(true);
             startForeground(4107, nb.build());
 
