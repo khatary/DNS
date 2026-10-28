@@ -187,7 +187,7 @@ public class DnsVpnService extends VpnService {
             s = new DatagramSocket();
             if (!protect(s)) return null;
              s.setSoTimeout(800);
-            InetAddress[] candidates = new InetAddress[] { target, alternateTarget(target) };
+            InetAddress[] candidates = new InetAddress[] { target, otherResolver(target) };
             for (InetAddress candidate : candidates) {
                 if (candidate == null) continue;
                 try {
