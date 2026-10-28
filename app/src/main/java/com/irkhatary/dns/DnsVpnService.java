@@ -63,7 +63,7 @@ public class DnsVpnService extends VpnService {
     private void startTunnel() {
         try {
             if (Build.VERSION.SDK_INT >= 26) {
-                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS 1.5", NotificationManager.IMPORTANCE_LOW);
+                NotificationChannel ch = new NotificationChannel(CHANNEL, "IR_Khatary DNS 1.6", NotificationManager.IMPORTANCE_LOW);
                 ((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(ch);
             }
             Intent open = new Intent(this, MainActivity.class);
@@ -178,14 +178,26 @@ public class DnsVpnService extends VpnService {
         try {
             s = new DatagramSocket();
             if (!protect(s)) return null;
-            s.setSoTimeout(1200);
-            s.send(new DatagramPacket(query, query.length, target, 53));
-            byte[] ans = new byte[4096];
-            DatagramPacket reply = new DatagramPacket(ans, ans.length);
-            s.receive(reply);
-            byte[] dns = new byte[reply.getLength()];
-            System.arraycopy(ans, 0, dns, 0, dns.length);
-            return dns;
+             s.setSoTimeout(800);
+            InetAddress[] candidates = new InetAddress[] { target, alternateTarget(target) };
+            for (InetAddress candidate : candidates) {
+                if (candidate == null) continue;
+                try {
+                    s.connect(candidate, 53);
+                    s.send(new DatagramPacket(query, query.length));
+                    byte[] ans = new byte[4096];
+                    DatagramPacket reply = new DatagramPacket(ans, ans.length);
+                    s.receive(reply);
+                    if (reply.getLength() >= 12) {
+                        byte[] dns = new byte[reply.getLength()];
+                        System.arraycopy(ans, 0, dns, 0, dns.length);
+                        return dns;
+                    }
+                } catch (Exception ignored) {
+                    try { s.disconnect(); } catch (Exception ignoredAgain) {}
+                }
+            }
+            return null;
         } catch (Exception ignored) {
             return null;
         } finally {
@@ -193,7 +205,7 @@ public class DnsVpnService extends VpnService {
         }
     }
 
-    private boolean isActiveTarget(InetAddress target) {
+    private InetAddress alternateTarget(InetAddress target) {\n        try {\n            InetAddress first = InetAddress.getByName(activeDns1);\n            InetAddress second = InetAddress.getByName(activeDns2);\n            if (target.equals(first)) return second;\n            if (target.equals(second)) return first;\n            return first;\n        } catch (Exception ignored) { return null; }\n    }\n\n    private boolean isActiveTarget(InetAddress target) {
         try {
             return target.equals(InetAddress.getByName(activeDns1)) || target.equals(InetAddress.getByName(activeDns2));
         } catch (Exception ignored) { return false; }
