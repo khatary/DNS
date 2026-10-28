@@ -213,14 +213,16 @@ public class DnsVpnService extends VpnService {
         }
     }
 
-    private InetAddress alternateTarget(InetAddress target) {\n        try {\n            InetAddress first = InetAddress.getByName(activeDns1);\n            InetAddress second = InetAddress.getByName(activeDns2);\n            if (target.equals(first)) return second;\n            if (target.equals(second)) return first;\n            return first;\n        } catch (Exception ignored) { return null; }\n    }\n\n    private InetAddress otherResolver(InetAddress failed) {
+    private InetAddress otherResolver(InetAddress failed) {
         try {
             InetAddress first = InetAddress.getByName(activeDns1);
             InetAddress second = InetAddress.getByName(activeDns2);
             if (failed.equals(first) && !failed.equals(second)) return second;
             if (failed.equals(second) && !failed.equals(first)) return first;
             return null;
-        } catch (Exception ignored) { return null; }
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private boolean isActiveTarget(InetAddress target) {
