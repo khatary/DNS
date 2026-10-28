@@ -150,7 +150,7 @@ public class MainActivity extends Activity {
                 }});
             }});
         }
-        @android.webkit.JavascriptInterface public String appVersion() { return "1.5"; }
+        @android.webkit.JavascriptInterface public String appVersion() { return "1.6"; }
         @android.webkit.JavascriptInterface public void openTelegram() { runOnUiThread(new Runnable() { @Override public void run() { try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/IR_Khatary_DNS"))); } catch (Exception ignored) {} }}); }
         @android.webkit.JavascriptInterface public void openUrl(final String url) {
             runOnUiThread(new Runnable() { @Override public void run() {
