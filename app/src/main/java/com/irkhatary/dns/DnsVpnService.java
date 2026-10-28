@@ -152,6 +152,10 @@ public class DnsVpnService extends VpnService {
             if (!isActiveTarget(target)) return null;
             byte[] query = copyRange(p, ihl + 8, udpLen - 8);
             byte[] dns = forwardQuery(query, target);
+            if (dns == null) {
+                InetAddress backup = otherResolver(target);
+                if (backup != null) dns = forwardQuery(query, backup);
+            }
             return dns == null ? null : makeIpv4Packet(p, srcPort, dns);
         } catch (Exception ignored) { return null; }
     }
@@ -169,6 +173,10 @@ public class DnsVpnService extends VpnService {
             if (!(target instanceof Inet6Address) || !isActiveTarget(target)) return null;
             byte[] query = copyRange(p, 48, udpLen - 8);
             byte[] dns = forwardQuery(query, target);
+            if (dns == null) {
+                InetAddress backup = otherResolver(target);
+                if (backup != null) dns = forwardQuery(query, backup);
+            }
             return dns == null ? null : makeIpv6Packet(p, srcPort, dns);
         } catch (Exception ignored) { return null; }
     }
@@ -205,7 +213,17 @@ public class DnsVpnService extends VpnService {
         }
     }
 
-    private InetAddress alternateTarget(InetAddress target) {\n        try {\n            InetAddress first = InetAddress.getByName(activeDns1);\n            InetAddress second = InetAddress.getByName(activeDns2);\n            if (target.equals(first)) return second;\n            if (target.equals(second)) return first;\n            return first;\n        } catch (Exception ignored) { return null; }\n    }\n\n    private boolean isActiveTarget(InetAddress target) {
+    private InetAddress alternateTarget(InetAddress target) {\n        try {\n            InetAddress first = InetAddress.getByName(activeDns1);\n            InetAddress second = InetAddress.getByName(activeDns2);\n            if (target.equals(first)) return second;\n            if (target.equals(second)) return first;\n            return first;\n        } catch (Exception ignored) { return null; }\n    }\n\n    private InetAddress otherResolver(InetAddress failed) {
+        try {
+            InetAddress first = InetAddress.getByName(activeDns1);
+            InetAddress second = InetAddress.getByName(activeDns2);
+            if (failed.equals(first) && !failed.equals(second)) return second;
+            if (failed.equals(second) && !failed.equals(first)) return first;
+            return null;
+        } catch (Exception ignored) { return null; }
+    }
+
+    private boolean isActiveTarget(InetAddress target) {
         try {
             return target.equals(InetAddress.getByName(activeDns1)) || target.equals(InetAddress.getByName(activeDns2));
         } catch (Exception ignored) { return false; }
