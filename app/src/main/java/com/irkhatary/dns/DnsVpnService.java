@@ -177,7 +177,7 @@ public class DnsVpnService extends VpnService {
         try {
             s = new DatagramSocket();
             if (!protect(s)) return null;
-            s.setSoTimeout(3000);
+            s.setSoTimeout(1200);
             s.send(new DatagramPacket(query, query.length, target, 53));
             byte[] ans = new byte[4096];
             DatagramPacket reply = new DatagramPacket(ans, ans.length);
