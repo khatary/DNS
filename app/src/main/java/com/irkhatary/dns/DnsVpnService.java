@@ -76,7 +76,8 @@ public class DnsVpnService extends VpnService {
                     (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0) | PendingIntent.FLAG_UPDATE_CURRENT);
             nb.setContentTitle("IR_Khatary DNS")
               .setContentText("DNS profile is active")
-              .setSmallIcon(android.R.drawable.stat_sys_upload_done)
+              .setSmallIcon(com.irkhatary.dns.R.drawable.ic_dns_connected)
+                .setColor(0xFF00C853)
               .setContentIntent(pi)
               .addAction(android.R.drawable.ic_media_pause, "قطع اتصال", stopPi)
               .setOngoing(true);
