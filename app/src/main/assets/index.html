@@ -143,6 +143,13 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .social-link b{margin-right:auto;color:#5bd0ff;font-size:16px}
 .note{font-size:10px;color:#8f9cc5;line-height:1.8;margin-top:17px;text-align:center}
 @media(max-height:720px){.orb{width:138px;height:138px}.power{width:60px;height:60px}.status{margin-top:8px;font-size:17px}.gcard{padding:8px 12px}.stat b{font-size:16px}.stat.ping b{font-size:20px}}
+.flag-btn{width:42px;height:40px;border:1px solid #3a3f8f;border-radius:12px;background:#10153a;font-size:25px;display:flex;align-items:center;justify-content:center;transform-origin:center;animation:flagWind 2.2s ease-in-out infinite;filter:drop-shadow(0 0 6px #00e5ff55)}
+@keyframes flagWind{0%,100%{transform:perspective(90px) rotateY(-10deg) skewY(0deg)}50%{transform:perspective(90px) rotateY(18deg) skewY(-5deg)}}
+.pk-ic{display:none!important}
+.sheet{height:93vh;height:93dvh}
+.grab{margin-top:5px}
+.sh-top{padding-top:3px;padding-bottom:5px}
+.search{margin-top:5px}
 </style></head><body>
 <div class="bg"></div>
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
@@ -168,13 +175,13 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <div class="list" id="srvList"></div></div>
 
 <div class="app" id="mainFrame">
-<div class="hdr"><button class="gear" style="visibility:hidden" tabindex="-1"></button><div class="logo"><svg viewBox="0 0 48 48"><path d="M24 3 43 14v20L24 45 5 34V14Z" fill="#0b1535" stroke="#00e5ff" stroke-width="2.5"/><path d="M17 17v14M17 24h9l5-7M26 24l5 7" stroke="#a855ff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><div><b>IR_KHATARY</b><small>DNS · PUBG</small></div></div><button class="gear" onclick="goTab('settings')" aria-label="Settings">⚙</button></div>
+<div class="hdr"><button class="gear" onclick="goTab('settings')" aria-label="Settings">🛠️</button><div class="logo"><svg viewBox="0 0 48 48"><path d="M24 3 43 14v20L24 45 5 34V14Z" fill="#0b1535" stroke="#00e5ff" stroke-width="2.5"/><path d="M17 17v14M17 24h9l5-7M26 24l5 7" stroke="#a855ff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><div><b>IR_KHATARY</b><small>DNS · PUBG</small></div></div><button class="flag-btn" aria-label="Iran">🇮🇷</button></div>
 <div class="gcard pubg-launch" role="button" tabindex="0" onclick="openPubg()"><div class="gicon" id="pubgIconBox"><img id="pubgIcon" alt="PUBG Mobile" draggable="false" onerror="this.style.display='none';this.parentElement.textContent='PUBG'"></div><div><strong>PUBG MOBILE</strong><small data-fa="بهینه‌ساز DNS گیمینگ" data-en="Gaming DNS optimizer" data-ar="محسّن DNS للألعاب">بهینه‌ساز DNS گیمینگ</small></div><div class="badge" id="badge"><i></i><span id="badgeTxt">آماده</span></div></div>
 <div class="orb-sec">
 <div class="orb-wrap"><button id="orb" class="orb" onclick="toggleDns()" aria-label="Connect or disconnect"><span class="wave"></span><span class="wave w2"></span><span class="ring"></span><span class="sat"></span><span class="sat s2"></span><svg class="power" id="orbIcon" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g id="powerGlyph"><path d="M50 9V47" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><path d="M27 24A39 39 0 1 0 73 24" stroke="currentColor" stroke-width="9" stroke-linecap="round"/></g><path id="checkGlyph" pathLength="100" d="M22 51 41 70 79 31" stroke="#00ff72" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" style="display:none"/></svg></button></div>
 <div id="status" class="status">DNS خاموش است</div><div id="detail" class="detail"></div><div id="toast" class="toast"></div></div>
 <div class="hud"><div class="stat ping"><small>DNS PING</small><b id="pingVal">--<em>ms</em></b><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline id="sparkLine" points=""/></svg></div><div class="stat"><small data-fa="مدت اتصال" data-en="UPTIME" data-ar="المدة">مدت اتصال</small><b id="timer">00:00:00</b></div><div class="stat ip"><small>DNS IP</small><b id="ipVal">--</b></div></div>
-<button class="picker" onclick="goTab('servers')"><span class="pk-ic" id="pkIc">🖥️</span><span class="pk-txt"><small data-fa="سرور DNS انتخاب‌شده" data-en="SELECTED DNS SERVER" data-ar="خادم DNS المحدد">سرور DNS انتخاب‌شده</small><b id="pkName">--</b></span><span id="pkPing" class="pg"></span><span class="chev">▾</span></button>
+<button class="picker" onclick="goTab('servers')"><span class="pk-ic" id="pkIc" aria-hidden="true"></span><span class="pk-txt"><small data-fa="سرور DNS انتخاب‌شده" data-en="SELECTED DNS SERVER" data-ar="خادم DNS المحدد">سرور DNS انتخاب‌شده</small><b id="pkName">--</b></span><span id="pkPing" class="pg"></span><span class="chev">▾</span></button>
 
 </div>
 <script>
@@ -200,7 +207,7 @@ function renderList(){if(!sheetOpen)return;var q=($('srvSearch').value||'').trim
 function scheduleRender(){if(!sheetOpen||rt)return;rt=setTimeout(function(){rt=null;renderList()},220)}
 function setFilter(f){filter=f;['All','V4','V6'].forEach(function(x){$('ch'+x).classList.toggle('on',(x==='All'?'all':x.toLowerCase())===f)});renderList()}
 function scanUi(){var done=scanTotal-scanPending,info=$('scanInfo'),bar=$('progBar');if(scanRunning){bar.style.width=(scanTotal?done/scanTotal*100:0)+'%';info.innerText=t('در حال اسکن… ','Scanning… ','جارٍ الفحص… ')+done+'/'+scanTotal}else{bar.style.width='0';var ok=uniq().filter(function(a){return scanResults[a]&&scanResults[a].ok}).length;info.innerText=t('پاسخ‌گو: ','Responsive: ','المستجيبة: ')+ok+'/'+uniq().length}}
-function updatePicker(){var s=servers[provider];$('pkName').innerText=s.name;$('pkIc').innerText=s.family===6?'🌐':'🖥️';$('pkPing').innerHTML=pgHtml(s.a)}
+function updatePicker(){var s=servers[provider];$('pkName').innerText=s.name;$('pkIc').innerText='';$('pkPing').innerHTML=pgHtml(s.a)}
 function updateHud(){var s=servers[provider],r=scanResults[s.a],el=$('pingVal');if(r&&r.ok){el.className=lvl(r.ms)[0];el.innerHTML=r.ms+'<em>ms</em>'}else{el.className=r?'bad':'';el.innerHTML=(r?'✕':'--')+'<em>ms</em>'}$('ipVal').innerText=s.a;drawSpark()}
 function drawSpark(){var h=pingHist,p=$('sparkLine');if(h.length<2){p.setAttribute('points','');return}var mx=Math.max.apply(null,h.concat([100]));p.setAttribute('points',h.map(function(v,i){return (i*100/(h.length-1)).toFixed(1)+','+(21-v/mx*18).toFixed(1)}).join(' '))}
 function resetHist(){pingHist=[];var r=scanResults[servers[provider].a];if(r&&r.ok)pingHist.push(r.ms)}
