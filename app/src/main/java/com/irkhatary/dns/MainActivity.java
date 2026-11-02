@@ -116,6 +116,20 @@ public class MainActivity extends Activity {
                 }
             }});
         }
+        @android.webkit.JavascriptInterface public String getPubgIcon() {
+            try {
+                android.graphics.drawable.Drawable d = getPackageManager().getApplicationIcon("com.tencent.ig");
+                int size = 144;
+                android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888);
+                android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+                d.setBounds(0, 0, size, size);
+                d.draw(canvas);
+                java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream);
+                bitmap.recycle();
+                return android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP);
+            } catch (Exception e) { return ""; }
+        }
         @android.webkit.JavascriptInterface public void launchPubg() {
             runOnUiThread(new Runnable() { @Override public void run() {
                 final String packageName = "com.tencent.ig";
