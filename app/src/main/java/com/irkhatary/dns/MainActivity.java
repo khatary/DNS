@@ -116,6 +116,23 @@ public class MainActivity extends Activity {
                 }
             }});
         }
+        @android.webkit.JavascriptInterface public void launchPubg() {
+            runOnUiThread(new Runnable() { @Override public void run() {
+                final String packageName = "com.tencent.ig";
+                try {
+                    Intent launch = getPackageManager().getLaunchIntentForPackage(packageName);
+                    if (launch != null) startActivity(launch);
+                    else {
+                        Intent market = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=" + packageName));
+                        try { startActivity(market); }
+                        catch (Exception noStore) { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/apps/details?id=" + packageName))); }
+                    }
+                } catch (Exception ignored) {
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/apps/details?id=" + packageName))); }
+                    catch (Exception ignoredAgain) {}
+                }
+            }});
+        }
         @android.webkit.JavascriptInterface public void scanDns(final String address) {
             scanner.execute(new Runnable() { @Override public void run() {
                 long start = android.os.SystemClock.elapsedRealtime();
@@ -150,7 +167,7 @@ public class MainActivity extends Activity {
                 }});
             }});
         }
-        @android.webkit.JavascriptInterface public String appVersion() { return "1.6"; }
+        @android.webkit.JavascriptInterface public String appVersion() { return "1.7"; }
         @android.webkit.JavascriptInterface public void openTelegram() { runOnUiThread(new Runnable() { @Override public void run() { try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/IR_Khatary_DNS"))); } catch (Exception ignored) {} }}); }
         @android.webkit.JavascriptInterface public void openUrl(final String url) {
             runOnUiThread(new Runnable() { @Override public void run() {
