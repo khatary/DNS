@@ -80,6 +80,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .stat.ip b{font-size:12px;margin-top:8px}
 .picker{width:100%;display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid #00dca880;border-radius:16px;background:linear-gradient(110deg,#0f2a38,#0e1431);text-align:start;flex-shrink:0;box-shadow:0 0 18px #00ffc31a}
 .picker:active{transform:scale(.985)}
+.orb-sec>.picker{margin-top:13px;width:100%;max-width:430px;flex-shrink:0}
 .pk-ic{width:38px;height:38px;border-radius:11px;background:#122a44;border:1px solid #1f7a8c;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .pk-txt{flex:1;min-width:0}
 .pk-txt small{font-size:9px;letter-spacing:1px;color:#7fdcc4;display:block}
@@ -179,9 +180,10 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <div class="gcard pubg-launch" role="button" tabindex="0" onclick="openPubg()"><div class="gicon" id="pubgIconBox"><img id="pubgIcon" alt="PUBG Mobile" draggable="false" onerror="this.style.display='none';this.parentElement.textContent='PUBG'"></div><div><strong>PUBG MOBILE</strong><small data-fa="بهینه‌ساز DNS گیمینگ" data-en="Gaming DNS optimizer" data-ar="محسّن DNS للألعاب">بهینه‌ساز DNS گیمینگ</small></div><div class="badge" id="badge"><i></i><span id="badgeTxt">آماده</span></div></div>
 <div class="orb-sec">
 <div class="orb-wrap"><button id="orb" class="orb" onclick="toggleDns()" aria-label="Connect or disconnect"><span class="wave"></span><span class="wave w2"></span><span class="ring"></span><span class="sat"></span><span class="sat s2"></span><svg class="power" id="orbIcon" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g id="powerGlyph"><path d="M50 9V47" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><path d="M27 24A39 39 0 1 0 73 24" stroke="currentColor" stroke-width="9" stroke-linecap="round"/></g><path id="checkGlyph" pathLength="100" d="M22 51 41 70 79 31" stroke="#00ff72" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" style="display:none"/></svg></button></div>
-<div id="status" class="status">DNS خاموش است</div><div id="detail" class="detail"></div><div id="toast" class="toast"></div></div>
-<div class="hud"><div class="stat ping"><small>DNS PING</small><b id="pingVal">--<em>ms</em></b><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline id="sparkLine" points=""/></svg></div><div class="stat"><small data-fa="مدت اتصال" data-en="UPTIME" data-ar="المدة">مدت اتصال</small><b id="timer">00:00:00</b></div><div class="stat ip"><small>DNS IP</small><b id="ipVal">--</b></div></div>
+<div id="status" class="status">DNS خاموش است</div><div id="detail" class="detail"></div><div id="toast" class="toast"></div>
 <button class="picker" onclick="goTab('servers')"><span class="pk-ic" id="pkIc" aria-hidden="true"></span><span class="pk-txt"><small data-fa="سرور DNS انتخاب‌شده" data-en="SELECTED DNS SERVER" data-ar="خادم DNS المحدد">سرور DNS انتخاب‌شده</small><b id="pkName">--</b></span><span id="pkPing" class="pg"></span><span class="chev">▾</span></button>
+</div>
+<div class="hud"><div class="stat ping"><small>DNS PING</small><b id="pingVal">--<em>ms</em></b><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline id="sparkLine" points=""/></svg></div><div class="stat"><small data-fa="مدت اتصال" data-en="UPTIME" data-ar="المدة">مدت اتصال</small><b id="timer">00:00:00</b></div><div class="stat ip"><small>DNS IP</small><b id="ipVal">--</b></div></div>
 
 </div>
 <script>
