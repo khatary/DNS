@@ -68,7 +68,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .status.on{color:#00ffc3;text-shadow:0 0 14px #00ffc3}
 .detail{text-align:center;color:#9aa8d5;font-size:12px;margin-top:6px;min-height:16px}
 .toast{display:none;text-align:center;color:#ffcb72;font-size:12px;line-height:1.7;margin-top:4px}
-.hud{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;flex-shrink:0}
+.hud{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;flex-shrink:0;width:100%;margin-top:12px}
 .stat{position:relative;padding:9px 10px;border:1px solid #1f2c5e;border-radius:14px;background:linear-gradient(180deg,#0e1533,#0a0f26);overflow:hidden;min-width:0}
 .stat small{display:block;font-size:9px;letter-spacing:1px;color:#7f8fc0;text-align:start}
 .stat b{display:block;direction:ltr;text-align:start;font-size:19px;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -182,9 +182,9 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <div class="orb-wrap"><button id="orb" class="orb" onclick="toggleDns()" aria-label="Connect or disconnect"><span class="wave"></span><span class="wave w2"></span><span class="ring"></span><span class="sat"></span><span class="sat s2"></span><svg class="power" id="orbIcon" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g id="powerGlyph"><path d="M50 9V47" stroke="currentColor" stroke-width="9" stroke-linecap="round"/><path d="M27 24A39 39 0 1 0 73 24" stroke="currentColor" stroke-width="9" stroke-linecap="round"/></g><path id="checkGlyph" pathLength="100" d="M22 51 41 70 79 31" stroke="#00ff72" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" style="display:none"/></svg></button></div>
 <div id="status" class="status">DNS خاموش است</div><div id="detail" class="detail"></div><div id="toast" class="toast"></div>
 <button class="picker" onclick="goTab('servers')"><span class="pk-ic" id="pkIc" aria-hidden="true"></span><span class="pk-txt"><small data-fa="سرور DNS انتخاب‌شده" data-en="SELECTED DNS SERVER" data-ar="خادم DNS المحدد">سرور DNS انتخاب‌شده</small><b id="pkName">--</b></span><span id="pkPing" class="pg"></span><span class="chev">▾</span></button>
+</div>
 <div class="hud"><div class="stat ping"><small>DNS PING</small><b id="pingVal">--<em>ms</em></b><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline id="sparkLine" points=""/></svg></div><div class="stat"><small data-fa="مدت اتصال" data-en="UPTIME" data-ar="المدة">مدت اتصال</small><b id="timer">00:00:00</b></div><div class="stat ip"><small>DNS IP</small><b id="ipVal">--</b></div></div>
 </div>
-
 </div>
 <script>
 function loadPubgIcon(){try{if(window.AndroidApp&&AndroidApp.getPubgIcon){var icon=AndroidApp.getPubgIcon();if(icon){$('pubgIcon').src='data:image/png;base64,'+icon;}}}catch(e){}}
