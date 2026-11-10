@@ -81,8 +81,6 @@ public class DnsVpnService extends VpnService {
               .setContentIntent(pi)
               .addAction(android.R.drawable.ic_media_pause, "قطع اتصال", stopPi)
               .setOngoing(true);
-            startForeground(4107, nb.build());
-
             InetAddress dns1 = InetAddress.getByName(activeDns1);
             InetAddress dns2 = InetAddress.getByName(activeDns2);
             Builder b = new Builder().setSession("IR_Khatary DNS")
@@ -94,6 +92,9 @@ public class DnsVpnService extends VpnService {
                     .setMtu(1500);
             tun = b.establish();
             if (tun == null) throw new IllegalStateException("VPN interface could not be established");
+            // Establish the VPN first so Android recognizes this as an active VPN
+            // before applying the systemExempted foreground-service type.
+            startForeground(4107, nb.build());
             running.set(true);
             startedAt = System.currentTimeMillis();
             broadcastState(true);
