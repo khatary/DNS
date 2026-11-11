@@ -34,6 +34,10 @@ public class DnsVpnService extends VpnService {
     private ParcelFileDescriptor tun;
     private Thread worker;
     private long startedAt;
+    public static volatile boolean tunnelActive = false;
+    public static volatile long tunnelStartedAt = 0L;
+    public static volatile String tunnelDns1 = "208.67.222.222";
+    public static volatile String tunnelDns2 = "208.67.220.220";
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent == null ? ACTION_START : intent.getAction();
@@ -97,6 +101,10 @@ public class DnsVpnService extends VpnService {
             startForeground(4107, nb.build());
             running.set(true);
             startedAt = System.currentTimeMillis();
+            tunnelDns1 = activeDns1;
+            tunnelDns2 = activeDns2;
+            tunnelStartedAt = startedAt;
+            tunnelActive = true;
             broadcastState(true);
             worker = new Thread(new Runnable() { @Override public void run() { readPackets(); } }, "IRK-DNS-TUN");
             worker.start();
@@ -125,6 +133,8 @@ public class DnsVpnService extends VpnService {
         }
         if (running.get()) {
             running.set(false);
+            tunnelActive = false;
+            tunnelStartedAt = 0L;
             broadcastState(false);
             stopSelf();
         }
@@ -317,6 +327,8 @@ public class DnsVpnService extends VpnService {
 
     private void stopTunnel() {
         running.set(false);
+        tunnelActive = false;
+        tunnelStartedAt = 0L;
         try { if (tun != null) tun.close(); } catch (Exception ignored) {}
         tun = null;
         if (worker != null) { worker.interrupt(); worker = null; }
