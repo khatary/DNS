@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends Activity {
     private static final int VPN_REQUEST = 701;
     private WebView web;
+    private boolean pageLoaded = false;
     private final ExecutorService scanner = Executors.newFixedThreadPool(3);
     private String pendingPrimary = "1.1.1.1";
     private String pendingSecondary = "1.0.0.1";
@@ -57,7 +58,13 @@ public class MainActivity extends Activity {
         web.setLongClickable(false);
         web.setOnLongClickListener(new View.OnLongClickListener() { @Override public boolean onLongClick(View v) { return true; } });
         web.setWebChromeClient(new WebChromeClient());
-        web.setWebViewClient(new WebViewClient());
+        web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                pageLoaded = true;
+                view.evaluateJavascript("if(window.syncVpnState){window.syncVpnState();}", null);
+            }
+        });
         web.addJavascriptInterface(new Bridge(), "AndroidApp");
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");
@@ -67,6 +74,11 @@ public class MainActivity extends Activity {
     }
 
     public class Bridge {
+        @android.webkit.JavascriptInterface public String getVpnState() {
+            boolean active = DnsVpnService.tunnelActive;
+            long elapsed = active ? Math.max(0L, System.currentTimeMillis() - DnsVpnService.tunnelStartedAt) : 0L;
+            return active + "|" + elapsed + "|" + DnsVpnService.tunnelDns1 + "|" + DnsVpnService.tunnelDns2;
+        }
         @android.webkit.JavascriptInterface public void setGameOptimization(final boolean enabled) {
             runOnUiThread(new Runnable() { @Override public void run() {
                 getPreferences(MODE_PRIVATE).edit().putBoolean("game_optimization", enabled).apply();
@@ -234,6 +246,13 @@ public class MainActivity extends Activity {
             else Toast.makeText(this, "برای اتصال باید مجوز VPN را تأیید کنید", Toast.LENGTH_LONG).show();
         }
     }
+    @Override protected void onResume() {
+        super.onResume();
+        if (pageLoaded && web != null) {
+            web.evaluateJavascript("if(window.syncVpnState){window.syncVpnState();}", null);
+        }
+    }
+
     @Override protected void onDestroy() {
         try { unregisterReceiver(stateReceiver); } catch (Exception ignored) {}
         if (web != null) web.destroy();
