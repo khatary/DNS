@@ -1,5 +1,3 @@
-><!-- IR_Khatary DNS 1.9: restore live VPN state and UK/US update resolvers -->
-</body></html>
 <!doctype html>
 <html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#04050d">
 <style>
@@ -251,7 +249,7 @@ function chooseDns(p){if(connected){showError(t('برای تغییر DNS ابت�
 function pickServer(k){if(chooseDns(k))closeAll();else renderList()}
 function pickBest(){var best=null,bm=1e9;Object.keys(servers).forEach(function(k){var s=servers[k];if(s.family===6&&!$('ipv6').checked)return;var r=scanResults[s.a];if(r&&r.ok&&r.ms<bm){bm=r.ms;best=k}});if(best){pickServer(best)}else{showError(t('هنوز نتیجه‌ای از اسکن نیست؛ چند ثانیه صبر کن.','No scan results yet; wait a few seconds.','لا توجد نتائج بعد؛ انتظر بضع ثوانٍ.'))}}
 function settingsChanged(){savePrefs();if(servers[provider]&&servers[provider].family===6&&!$('ipv6').checked){if(connected){try{AndroidApp.disconnect()}catch(e){}setState(false)}provider='opendns';resetHist();updatePicker();updateHud();showError(t('IPv6 خاموش شد؛ سرور به OpenDNS برگشت.','IPv6 disabled; switched to OpenDNS.','تم إيقاف IPv6؛ تم الرجوع إلى OpenDNS.'))}if(!$('ipv4').checked&&(!servers[provider]||servers[provider].family===4)){if(connected){try{AndroidApp.disconnect()}catch(e){}setState(false)}$('detail').innerText=t('برای استفاده از DNS، IPv4 را فعال کن.','Enable IPv4 to use DNS.','فعّل IPv4 لاستخدام DNS.')}else if(!connected){$('detail').innerText=t('برای فعال‌سازی ضربه بزن','Tap to connect','اضغط للاتصال')}savePrefs();renderList()}
-function setLanguage(v){lang=v;savePrefs();document.documentElement.lang=v;document.documentElement.dir=v==='en'?'ltr':'rtl';document.querySelectorAll('[data-fa]').forEach(function(el){el.innerText=el.getAttribute('data-'+v)});$('srvSearch').placeholder=$('srvSearch').getAttribute('data-ph-'+v);['fa','en','ar'].forEach(function(x){$(x+'Btn').classList.toggle('active',x===v)});$('version').innerText=t('نسخه برنامه: 1.7','App version: 1.9','إصدار التطبيق: 1.9');setState(connected);scanUi();renderList()}
+function setLanguage(v){lang=v;savePrefs();document.documentElement.lang=v;document.documentElement.dir=v==='en'?'ltr':'rtl';document.querySelectorAll('[data-fa]').forEach(function(el){el.innerText=el.getAttribute('data-'+v)});$('srvSearch').placeholder=$('srvSearch').getAttribute('data-ph-'+v);['fa','en','ar'].forEach(function(x){$(x+'Btn').classList.toggle('active',x===v)});$('version').innerText=t('نسخه برنامه: 1.9','App version: 1.9','إصدار التطبيق: 1.9');setState(connected);scanUi();renderList()}
 
 /* ---------- connect ---------- */
 var connectingTimer=null;
