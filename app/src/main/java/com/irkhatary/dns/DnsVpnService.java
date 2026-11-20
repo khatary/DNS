@@ -79,7 +79,7 @@ public class DnsVpnService extends VpnService {
             PendingIntent stopPi = PendingIntent.getService(this, 4108, stop,
                     (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0) | PendingIntent.FLAG_UPDATE_CURRENT);
             nb.setContentTitle("IR_Khatary DNS")
-              .setContentText("DNS profile is active")
+              .setContentText("بهینه ساز DNS گیمینگ فعال شد")
               .setSmallIcon(com.irkhatary.dns.R.drawable.ic_dns_connected)
                 .setColor(0xFF00C853)
               .setContentIntent(pi)
