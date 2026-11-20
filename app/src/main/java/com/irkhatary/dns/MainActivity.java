@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
     private String pendingSecondary = "1.0.0.1";
     private static final String CHANNEL_ID = "irkhatary_dns_status";
     private static final int NOTIFICATION_ID = 8152;
+    private static final int FIRST_NOTIFICATION_PERMISSION_REQUEST = 703;
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (web != null) {
@@ -67,10 +68,24 @@ public class MainActivity extends Activity {
         });
         web.addJavascriptInterface(new Bridge(), "AndroidApp");
         setContentView(web);
+        requestNotificationPermissionOnFirstLaunch();
         web.loadUrl("file:///android_asset/index.html");
         IntentFilter filter = new IntentFilter(DnsVpnService.ACTION_STATE);
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(stateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         else registerReceiver(stateReceiver, filter);
+    }
+
+
+    private void requestNotificationPermissionOnFirstLaunch() {
+        if (Build.VERSION.SDK_INT < 33) return;
+        android.content.SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        if (prefs.getBoolean("first_notification_permission_prompted", false)) return;
+        prefs.edit().putBoolean("first_notification_permission_prompted", true).apply();
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, FIRST_NOTIFICATION_PERMISSION_REQUEST);
+        } else {
+            prefs.edit().putBoolean("notifications_enabled", true).apply();
+        }
     }
 
     public class Bridge {
@@ -193,7 +208,7 @@ public class MainActivity extends Activity {
                 }});
             }});
         }
-        @android.webkit.JavascriptInterface public String appVersion() { return "1.9"; }
+        @android.webkit.JavascriptInterface public String appVersion() { return "2.0"; }
         @android.webkit.JavascriptInterface public void openTelegram() { runOnUiThread(new Runnable() { @Override public void run() { try { startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/IR_Khatary_DNS"))); } catch (Exception ignored) {} }}); }
         @android.webkit.JavascriptInterface public void openUrl(final String url) {
             runOnUiThread(new Runnable() { @Override public void run() {
@@ -225,6 +240,10 @@ public class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == FIRST_NOTIFICATION_PERMISSION_REQUEST) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            getPreferences(MODE_PRIVATE).edit().putBoolean("notifications_enabled", granted).apply();
+        }
         if (requestCode == 702 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (getPreferences(MODE_PRIVATE).getBoolean("notifications_enabled", false)) showStatusNotification(false);
         }
