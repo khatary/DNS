@@ -101,6 +101,9 @@ public class MainActivity extends Activity {
                 else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             }});
         }
+        @android.webkit.JavascriptInterface public boolean getNotificationsEnabled() {
+            return getPreferences(MODE_PRIVATE).getBoolean("notifications_enabled", false);
+        }
         @android.webkit.JavascriptInterface public void setNotificationsEnabled(final boolean enabled) {
             getPreferences(MODE_PRIVATE).edit().putBoolean("notifications_enabled", enabled).apply();
             if (enabled && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -243,6 +246,7 @@ public class MainActivity extends Activity {
         if (requestCode == FIRST_NOTIFICATION_PERMISSION_REQUEST) {
             boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
             getPreferences(MODE_PRIVATE).edit().putBoolean("notifications_enabled", granted).apply();
+            if (web != null && Build.VERSION.SDK_INT >= 19) web.evaluateJavascript("document.getElementById(\'notifications\').checked=" + granted + ";localStorage.setItem(\'irk_notifications\',\'" + (granted ? "1" : "0") + "\');", null);
         }
         if (requestCode == 702 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (getPreferences(MODE_PRIVATE).getBoolean("notifications_enabled", false)) showStatusNotification(false);
