@@ -326,7 +326,7 @@ public class MainActivity extends Activity {
     @Override protected void onResume() {
         super.onResume();
         if (pageLoaded && web != null) {
-            web.evaluateJavascript("if(window.syncVpnState){window.syncVpnState();}", null);
+            web.evaluateJavascript("if(window.syncVpnState){window.syncVpnState();}if(window.gfxRefresh){window.gfxRefresh();}", null);
         }
     }
 
