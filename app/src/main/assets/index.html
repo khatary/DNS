@@ -258,7 +258,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <div id="gfxPage" class="gfxpage" aria-hidden="true">
 <button class="gfxback" onclick="closeGfx()" aria-label="Back"><span>›</span> بازگشت</button>
 <div class="gfx-hero"><div class="gfx-glow"></div><h1>GFX TOOL</h1><div class="gfx-sub">PUBG MOBILE</div></div>
-<div class="gfx-card"><div class="gfx-row"><span>Shizuku</span><b id="gfxShz" class="bad">—</b></div><div class="gfx-row"><span>PUBG MOBILE</span><b id="gfxGame" class="bad">—</b></div><button class="gfx-perm" id="gfxPerm" onclick="gfxPermission()">دریافت مجوز Shizuku</button></div>
+<div class="gfx-card"><div class="gfx-row"><span>Shizuku</span><b id="gfxShz" class="bad">—</b></div><div class="gfx-row"><span>PUBG MOBILE</span><b id="gfxGame" class="bad">—</b></div><button class="gfx-perm" id="gfxPerm" onclick="gfxPermission()">فعال‌سازی / مجوز Shizuku</button><div class="gfx-row"><span>دسترسی فایل PUBG</span><b id="gfxFile" class="bad">بررسی نشده</b></div><button class="gfx-perm" id="gfxFileBtn" onclick="gfxCheckFile()">بررسی دسترسی Active.sav</button></div>
 <div class="gfx-hint" id="gfxHint">ابتدا وارد PUBG MOBILE شو، سپس اسلایدر را به سمت راست بکش.</div>
 <div class="gfx-track locked" id="gfxTrack"><div class="gfx-fill" id="gfxFill"></div><div class="gfx-label" id="gfxLabel">بکش به سمت راست »</div><div class="gfx-knob" id="gfxKnob">⚡</div></div>
 <div class="gfx-res" id="gfxRes"></div>
@@ -316,16 +316,68 @@ function renderList(){if(!sheetOpen)return;var q=($('srvSearch').value||'').trim
  sw($('sheet'),'down',function(el){var l=$('srvList');if(el.tagName==='INPUT')return false;if(l&&l.contains(el))return l.scrollTop<=0;return true;});
 })();
 
-var gfxBusy=false;
+var gfxBusy=false,gfxFileReady=false,gfxFileMessage='';
 function gfxCall(n,a){try{if(window.AndroidApp&&typeof AndroidApp[n]==='function')return AndroidApp[n].apply(AndroidApp,a||[])}catch(e){}return undefined}
-function gfxRefresh(){var st=gfxCall('shizukuStatus'),sh=$('gfxShz'),ok=st==='granted';sh.className=ok?'ok':'bad';sh.innerText=st===undefined?'نسخه برنامه پشتیبانی نمی‌کند':(ok?'مجوز داده شد':(st==='unavailable'?'Shizuku را اجرا کن':'مجوز لازم است'));$('gfxPerm').style.display=ok?'none':'block';var g=$('gfxGame');g.className='ok';g.innerText='پس از فعال‌سازی، ورود خودکار';$('gfxTrack').classList.toggle('locked',!ok);$('gfxHint').innerText=!ok?'Shizuku را اجرا کن و مجوز را بگیر؛ سپس اسلایدر را بکش.':'اسلایدر را بکش؛ بعد از ثبت تنظیمات، PUBG خودکار باز می‌شود.';return ok}
+function gfxRefresh(){
+ var st=gfxCall('shizukuStatus'),sh=$('gfxShz'),ok=st==='granted',game=gfxCall('pubgInstalled')===true;
+ if(!ok)gfxFileReady=false;
+ sh.className=ok?'ok':'bad';
+ sh.innerText=st===undefined?'نسخه برنامه پشتیبانی نمی‌کند':(ok?'فعال و مجاز':(st==='unavailable'?'Shizuku اجرا نیست':'مجوز داده نشده'));
+ $('gfxPerm').style.display=ok?'none':'block';
+ var ge=$('gfxGame');ge.className=game?'ok':'bad';ge.innerText=game?'PUBG Global نصب است':'PUBG Global نصب نیست';
+ var fe=$('gfxFile');fe.className=gfxFileReady?'ok':'bad';fe.innerText=gfxFileReady?'دسترسی تأیید شد':'بررسی نشده';
+ var ready=ok&&game&&gfxFileReady;
+ $('gfxTrack').classList.toggle('locked',!ready);
+ $('gfxHint').innerText=!ok?'Shizuku را Start کن و مجوز IR_Khatary را بده.':(!game?'نسخه PUBG Global (com.tencent.ig) نصب نیست.':(!gfxFileReady?'ابتدا دکمه «بررسی دسترسی Active.sav» را بزن.':'دسترسی فایل تأیید شد؛ اسلایدر را بکش تا تنظیم ثبت و بررسی شود.'));
+ return ready
+}
 function openGfx(){$('gfxPage').classList.add('show');$('gfxRes').innerText='';gfxReset();gfxRefresh()}
 function closeGfx(){$('gfxPage').classList.remove('show')}
 function gfxPermission(){gfxCall('requestShizuku');setTimeout(gfxRefresh,700);setTimeout(gfxRefresh,1800);setTimeout(gfxRefresh,3500)}
-window.onShizukuPermissionResult=function(ok,reason){gfxRefresh();if(ok)showError('مجوز Shizuku با موفقیت دریافت شد.');else if(reason==='unavailable')showError('Shizuku نصب یا فعال نیست؛ آن را نصب و Start کن، سپس دوباره مجوز بگیر.')};
+function gfxCheckFile(){
+ if(gfxCall('shizukuStatus')!=='granted'){gfxFileReady=false;gfxRefresh();showError('ابتدا Shizuku را اجرا و مجوز IR_Khatary را بده.');return}
+ gfxFileReady=false;$('gfxFile').className='bad';$('gfxFile').innerText='در حال بررسی…';$('gfxRes').innerText='';
+ var r=gfxCall('checkPubgSave');
+ if(r===undefined){window.onFpsFileCheck(false,'نسخه برنامه از بررسی فایل پشتیبانی نمی‌کند.')}
+ else if(typeof r==='string'&&r&&r!=='pending'){window.onFpsFileCheck(false,r)}
+}
+window.onFpsFileCheck=function(ok,msg){
+ gfxFileReady=!!ok;gfxFileMessage=msg||'';
+ $('gfxFile').className=ok?'ok':'bad';$('gfxFile').innerText=ok?'دسترسی تأیید شد':'دسترسی ناموفق';
+ $('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'فایل قابل خواندن است.':'فایل قابل دسترسی نیست.');
+ gfxRefresh()
+}
+window.onShizukuPermissionResult=function(ok,reason){
+ gfxRefresh();
+ if(ok){showError('مجوز Shizuku دریافت شد؛ در حال بررسی فایل PUBG…');gfxCheckFile()}
+ else if(reason==='unavailable')showError('Shizuku نصب یا Start نیست. Shizuku رسمی را باز کن، Start را بزن و سپس به برنامه برگرد و مجوز را دوباره بگیر.')
+}
 function gfxReset(){var k=$('gfxKnob');k.style.transition='left .25s';k.style.left='5px';$('gfxFill').style.width='0';$('gfxTrack').classList.remove('done');$('gfxLabel').innerText='بکش به سمت راست »'}
-window.onFpsResult=function(ok,msg){gfxBusy=false;$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'انجام شد':'ناموفق بود');if(ok){$('gfxLabel').innerText='ثبت شد ✔';setTimeout(function(){closeGfx();gfxCall('launchPubg')},900)}else gfxReset()};
-(function(){var tr=$('gfxTrack'),kn=$('gfxKnob'),fill=$('gfxFill'),x0=0,on=false,max=0;function pos(e){return(e.touches?e.touches[0].clientX:e.clientX)}function down(e){if(gfxBusy||!gfxRefresh()){if(!gfxBusy)showError('ابتدا Shizuku را اجرا و مجوز آن را بده.');return}on=true;x0=pos(e)-kn.offsetLeft;max=tr.clientWidth-kn.offsetWidth-5;kn.style.transition='none';e.preventDefault()}function move(e){if(!on)return;var x=Math.max(5,Math.min(max,pos(e)-x0));kn.style.left=x+'px';fill.style.width=(x+27)+'px';e.preventDefault()}function up(){if(!on)return;on=false;if(kn.offsetLeft>=max-8){kn.style.left=max+'px';fill.style.width='100%';tr.classList.add('done');$('gfxLabel').innerText='در حال اعمال…';gfxBusy=true;var r=gfxCall('applyPubgFps',[7]);if(r===undefined){window.onFpsResult(false,'پل Shizuku در این نسخه در دسترس نیست.')}else if(typeof r==='string'&&r&&r!=='pending'){window.onFpsResult(false,r)}}else gfxReset()}kn.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);kn.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up)})();
+window.onFpsResult=function(ok,msg){
+ gfxBusy=false;$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'انجام شد':'ناموفق بود');
+ if(ok){gfxFileReady=false;$('gfxLabel').innerText='ثبت و تأیید شد ✔';setTimeout(function(){closeGfx();gfxCall('launchPubg')},900)}else gfxReset()
+}
+(function(){
+ var tr=$('gfxTrack'),kn=$('gfxKnob'),fill=$('gfxFill'),x0=0,on=false,max=0;
+ function pos(e){return(e.touches?e.touches[0].clientX:e.clientX)}
+ function down(e){
+  if(gfxBusy)return;
+  if(!gfxRefresh()){showError('برای اعمال تنظیمات، Shizuku، نصب PUBG Global و بررسی موفق Active.sav لازم است.');return}
+  on=true;x0=pos(e)-kn.offsetLeft;max=tr.clientWidth-kn.offsetWidth-5;kn.style.transition='none';e.preventDefault()
+ }
+ function move(e){if(!on)return;var x=Math.max(5,Math.min(max,pos(e)-x0));kn.style.left=x+'px';fill.style.width=(x+27)+'px';e.preventDefault()}
+ function up(){
+  if(!on)return;on=false;
+  if(kn.offsetLeft>=max-8){
+   kn.style.left=max+'px';fill.style.width='100%';tr.classList.add('done');$('gfxLabel').innerText='در حال اعمال و بررسی…';gfxBusy=true;
+   var r=gfxCall('applyPubgFps',[7]);
+   if(r===undefined)window.onFpsResult(false,'پل Shizuku در این نسخه در دسترس نیست.');
+   else if(typeof r==='string'&&r&&r!=='pending')window.onFpsResult(false,r)
+  }else gfxReset()
+ }
+ kn.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+ kn.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up)
+})();
 function scheduleRender(){if(!sheetOpen||rt)return;rt=setTimeout(function(){rt=null;renderList()},500)}
 function setFilter(f){filter=f;['All','V4','V6'].forEach(function(x){$('ch'+x).classList.toggle('on',(x==='All'?'all':x.toLowerCase())===f)});renderList()}
 function scanUi(){var done=scanTotal-scanPending,info=$('scanInfo'),bar=$('progBar');if(scanRunning){bar.style.width=(scanTotal?done/scanTotal*100:0)+'%';info.innerText=t('در حال اسکن… ','Scanning… ','جارٍ الفحص… ')+done+'/'+scanTotal}else{bar.style.width='0';var ok=uniq().filter(function(a){return scanResults[a]&&scanResults[a].ok}).length;info.innerText=t('پاسخ‌گو: ','Responsive: ','المستجيبة: ')+ok+'/'+uniq().length}}
