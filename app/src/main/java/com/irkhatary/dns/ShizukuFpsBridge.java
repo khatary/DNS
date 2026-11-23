@@ -65,7 +65,7 @@ public final class ShizukuFpsBridge {
     }
 
     private static byte[] runBytes(String[] cmd) throws Exception {
-        Process p = Shizuku.newProcess(cmd, null, null);
+        Process p = Shizuku.newProcess(cmd);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (InputStream in = p.getInputStream()) { byte[] buf = new byte[8192]; int n; while ((n=in.read(buf))>0) out.write(buf,0,n); }
         if (p.waitFor() != 0) throw new Exception("خواندن فایل ذخیره بازی ناموفق بود");
