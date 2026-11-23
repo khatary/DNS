@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Method;
 import rikka.shizuku.Shizuku;
 
 /** Shizuku shell helper. Only updates verified IntProperty tags and keeps a backup. */
@@ -37,6 +38,12 @@ public final class ShizukuFpsBridge {
         } catch (Throwable e) {
             callback.done(false, "اعمال تنظیمات ناموفق: " + (e.getMessage() == null ? "خطای Shizuku" : e.getMessage()));
         }
+    }
+
+    private static Process newProcess(String[] cmd) throws Exception {
+        Method method = Shizuku.class.getDeclaredMethod("newProcess", String[].class, String[].class, String.class);
+        method.setAccessible(true);
+        return (Process) method.invoke(null, cmd, null, null);
     }
 
     private static int patchInt(byte[] d, String name, int value) {
