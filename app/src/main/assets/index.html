@@ -259,7 +259,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <button class="gfxback" onclick="closeGfx()" aria-label="Back"><span>›</span> بازگشت</button>
 <div class="gfx-hero"><div class="gfx-glow"></div><h1>GFX TOOL</h1><div class="gfx-sub">PUBG MOBILE</div></div>
 <div class="gfx-card"><div class="gfx-row"><span>Shizuku</span><b id="gfxShz" class="bad">—</b></div><div class="gfx-row"><span>PUBG MOBILE</span><b id="gfxGame" class="bad">—</b></div><button class="gfx-perm" id="gfxPerm" onclick="gfxPermission()">فعال‌سازی / مجوز Shizuku</button><div class="gfx-row"><span>دسترسی فایل PUBG</span><b id="gfxFile" class="bad">بررسی نشده</b></div><button class="gfx-perm" id="gfxFileBtn" onclick="gfxCheckFile()">بررسی دسترسی Active.sav</button></div>
-<div class="gfx-hint" id="gfxHint">ابتدا وارد PUBG MOBILE شو، سپس اسلایدر را به سمت راست بکش.</div>
+<div class="gfx-hint" id="gfxHint">PUBG را کاملاً ببند؛ Shizuku را Start کن و فایل را بررسی کن.</div>
 <div class="gfx-track locked" id="gfxTrack"><div class="gfx-fill" id="gfxFill"></div><div class="gfx-label" id="gfxLabel">بکش به سمت راست »</div><div class="gfx-knob" id="gfxKnob">⚡</div></div>
 <div class="gfx-res" id="gfxRes"></div>
 </div>
@@ -328,7 +328,7 @@ function gfxRefresh(){
  var fe=$('gfxFile');fe.className=gfxFileReady?'ok':'bad';fe.innerText=gfxFileReady?'دسترسی تأیید شد':'بررسی نشده';
  var ready=ok&&game&&gfxFileReady;
  $('gfxTrack').classList.toggle('locked',!ready);
- $('gfxHint').innerText=!ok?'Shizuku را Start کن و مجوز IR_Khatary را بده.':(!game?'نسخه PUBG Global (com.tencent.ig) نصب نیست.':(!gfxFileReady?'ابتدا دکمه «بررسی دسترسی Active.sav» را بزن.':'دسترسی فایل تأیید شد؛ اسلایدر را بکش تا تنظیم ثبت و بررسی شود.'));
+ $('gfxHint').innerText=!ok?'Shizuku را Start کن و مجوز IR_Khatary را بده.':(!game?'نسخه PUBG Global (com.tencent.ig) نصب نیست.':(!gfxFileReady?'ابتدا دکمه «بررسی دسترسی Active.sav» را بزن.':'دسترسی فایل تأیید شد؛ PUBG را کاملاً ببند و اسلایدر را بکش. پس از ثبت و تأیید، بازی خودکار باز می‌شود.'));
  return ready
 }
 function openGfx(){$('gfxPage').classList.add('show');$('gfxRes').innerText='';gfxReset();gfxRefresh()}
