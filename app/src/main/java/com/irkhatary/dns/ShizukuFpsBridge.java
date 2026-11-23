@@ -64,7 +64,10 @@ public final class ShizukuFpsBridge {
             int size = b.getInt(p); p += 4;
             if (size != 4 || p + 8 > d.length) continue;
             p += 4; // array index
-            b.putInt(p, value);
+            int currentValue = b.getInt(p);
+            // This PUBG save encodes FPS enum values in the high byte (e.g. 3 -> 0x0300).
+            int encodedValue = currentValue > 255 && (currentValue & 0xFF) == 0 ? value << 8 : value;
+            b.putInt(p, encodedValue);
             count++;
             i = p + 3;
         }
