@@ -27,7 +27,7 @@ public final class ShizukuFpsBridge {
                 callback.done(false, "فایل تنظیمات PUBG پیدا نشد یا قالب آن پشتیبانی نمی‌شود."); return;
             }
             int changed = 0;
-            for (String name : new String[]{"FPSLevel", "BattleFPS", "LobbyFPS", "MainCityFPS"}) changed += patchInt(data, name, level);
+            for (String name : new String[]{"FPSLevel", "BattleFPS", "LobbyFPS", "MainCityFPS"}) changed += patchInt(data, name, level << 8);
             if (changed == 0) { callback.done(false, "گزینه FPS در فایل این نسخه از PUBG پیدا نشد؛ فایل تغییر نکرد."); return; }
             runChecked(new String[]{"sh", "-c", "cp '" + SAVE + "' '" + SAVE + ".irkhatary.bak' && chmod 600 '" + SAVE + ".irkhatary.bak'"});
             Process writer = newProcess(new String[]{"sh", "-c", "cat > '" + TEMP + "'"});
