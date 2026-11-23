@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
             runOnUiThread(new Runnable() { @Override public void run() {
                 try {
                     if (!rikka.shizuku.Shizuku.pingBinder()) {
-                        Intent shizuku = getPackageManager().getLaunchIntentForPackage("moe.shizuku.ori");
+                        Intent shizuku = getPackageManager().getLaunchIntentForPackage("moe.shizuku.privileged.api");
                         if (shizuku != null) startActivity(shizuku);
                         else startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://shizuku.rikka.app/")));
                         if (web != null) web.evaluateJavascript("window.onShizukuPermissionResult(false,'unavailable')", null);
@@ -138,6 +138,25 @@ public class MainActivity extends Activity {
                     @Override public void done(final boolean ok, final String message) {
                         runOnUiThread(new Runnable() { @Override public void run() {
                             if (web != null) web.evaluateJavascript("window.onFpsResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
+                        }});
+                    }
+                });
+            }});
+            return "pending";
+        }
+        @android.webkit.JavascriptInterface public boolean pubgInstalled() {
+            try {
+                getPackageManager().getPackageInfo("com.tencent.ig", 0);
+                return true;
+            } catch (PackageManager.NameNotFoundException e) { return false; }
+        }
+        @android.webkit.JavascriptInterface public String checkPubgSave() {
+            if (!shizukuStatus().equals("granted")) return "ابتدا Shizuku را اجرا و مجوز آن را بده.";
+            gfxExecutor.execute(new Runnable() { @Override public void run() {
+                ShizukuFpsBridge.checkFile(new ShizukuFpsBridge.Result() {
+                    @Override public void done(final boolean ok, final String message) {
+                        runOnUiThread(new Runnable() { @Override public void run() {
+                            if (web != null) web.evaluateJavascript("window.onFpsFileCheck(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
                         }});
                     }
                 });
