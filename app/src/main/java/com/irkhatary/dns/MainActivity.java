@@ -136,7 +136,7 @@ public class MainActivity extends Activity {
                 ShizukuFpsBridge.apply(level, new ShizukuFpsBridge.Result() {
                     @Override public void done(final boolean ok, final String message) {
                         runOnUiThread(new Runnable() { @Override public void run() {
-                            if (web != null) web.evaluateJavascript("window.onFpsResult(" + ok + "," + JSONObjectQuote(message) + ")", null);
+                            if (web != null) web.evaluateJavascript("window.onFpsResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
                         }});
                     }
                 });
