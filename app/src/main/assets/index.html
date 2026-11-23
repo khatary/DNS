@@ -311,31 +311,16 @@ function renderList(){if(!sheetOpen)return;var q=($('srvSearch').value||'').trim
  sw($('sheet'),'down',function(el){var l=$('srvList');if(el.tagName==='INPUT')return false;if(l&&l.contains(el))return l.scrollTop<=0;return true;});
 })();
 
-var pubgEntered=false,gfxBusy=false;
-(function(){var o=window.openPubg;window.openPubg=function(){pubgEntered=true;try{sessionStorage.setItem('pubgEntered','1')}catch(e){}o.apply(this,arguments)}})();
+var gfxBusy=false;
 function gfxCall(n,a){try{if(window.AndroidApp&&typeof AndroidApp[n]==='function')return AndroidApp[n].apply(AndroidApp,a||[])}catch(e){}return undefined}
-function gfxRefresh(){try{if(sessionStorage.getItem('pubgEntered'))pubgEntered=true}catch(e){}
- var st=gfxCall('shizukuStatus');var sh=$('gfxShz');var ok=st==='granted';
- sh.className=ok?'ok':'bad';sh.innerText=st===undefined?'نسخه برنامه پشتیبانی نمی‌کند':(ok?'مجوز داده شد':(st==='unavailable'?'Shizuku روشن نیست':'مجوز لازم است'));
- $('gfxPerm').style.display=(st===undefined||ok)?'none':'block';
- var g=$('gfxGame');g.className=pubgEntered?'ok':'bad';g.innerText=pubgEntered?'وارد شده':'هنوز وارد نشده';
- var can=pubgEntered&&ok;$('gfxTrack').classList.toggle('locked',!can);
- $('gfxHint').innerText=!pubgEntered?'ابتدا وارد PUBG MOBILE شو، سپس اسلایدر را به سمت راست بکش.':(!ok?'ابتدا مجوز Shizuku را بده.':'آماده است؛ اسلایدر را به سمت راست بکش.');return can}
+function gfxRefresh(){var st=gfxCall('shizukuStatus'),sh=$('gfxShz'),ok=st==='granted';sh.className=ok?'ok':'bad';sh.innerText=st===undefined?'نسخه برنامه پشتیبانی نمی‌کند':(ok?'مجوز داده شد':(st==='unavailable'?'Shizuku را اجرا کن':'مجوز لازم است'));$('gfxPerm').style.display=ok?'none':'block';var g=$('gfxGame');g.className='ok';g.innerText='پس از فعال‌سازی، ورود خودکار';$('gfxTrack').classList.toggle('locked',!ok);$('gfxHint').innerText=!ok?'Shizuku را اجرا کن و مجوز را بگیر؛ سپس اسلایدر را بکش.':'اسلایدر را بکش؛ بعد از ثبت تنظیمات، PUBG خودکار باز می‌شود.';return ok}
 function openGfx(){$('gfxPage').classList.add('show');$('gfxRes').innerText='';gfxReset();gfxRefresh()}
 function closeGfx(){$('gfxPage').classList.remove('show')}
-function gfxPermission(){gfxCall('requestShizuku');setTimeout(gfxRefresh,1200);setTimeout(gfxRefresh,3500)}
+function gfxPermission(){gfxCall('requestShizuku');setTimeout(gfxRefresh,700);setTimeout(gfxRefresh,1800);setTimeout(gfxRefresh,3500)}
+window.onShizukuPermissionResult=function(ok,reason){gfxRefresh();if(ok)showError('مجوز Shizuku با موفقیت دریافت شد.');else if(reason==='unavailable')showError('Shizuku نصب یا فعال نیست؛ آن را نصب و Start کن، سپس دوباره مجوز بگیر.')};
 function gfxReset(){var k=$('gfxKnob');k.style.transition='left .25s';k.style.left='5px';$('gfxFill').style.width='0';$('gfxTrack').classList.remove('done');$('gfxLabel').innerText='بکش به سمت راست »'}
-window.onFpsResult=function(ok,msg){gfxBusy=false;if(ok)$('gfxLabel').innerText='انجام شد ✔';$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'انجام شد':'ناموفق بود');if(!ok)gfxReset()};
-(function(){var tr=$('gfxTrack'),kn=$('gfxKnob'),fill=$('gfxFill'),x0=0,on=false,max=0;
- function pos(e){return (e.touches?e.touches[0].clientX:e.clientX)}
- function down(e){if(gfxBusy||!gfxRefresh()){if(!gfxBusy)showError('ابتدا وارد PUBG شو و مجوز Shizuku را بده.');return}on=true;x0=pos(e)-kn.offsetLeft;max=tr.clientWidth-kn.offsetWidth-5;kn.style.transition='none';e.preventDefault()}
- function move(e){if(!on)return;var x=Math.max(5,Math.min(max,pos(e)-x0));kn.style.left=x+'px';fill.style.width=(x+27)+'px';e.preventDefault()}
- function up(){if(!on)return;on=false;if(kn.offsetLeft>=max-8){kn.style.left=max+'px';fill.style.width='100%';tr.classList.add('done');$('gfxLabel').innerText='در حال اعمال…';gfxBusy=true;
-   var r=gfxCall('applyPubgFps',[7]);if(r===undefined){window.onFpsResult(false,'نسخه اندروید این قابلیت را ندارد.')}else if(typeof r==='string'&&r){window.onFpsResult(r.indexOf('ok')===0,r.indexOf('ok')===0?'تنظیمات اعمال شد ✔':r)}}
-  else gfxReset()}
- kn.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
- kn.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
-})();
+window.onFpsResult=function(ok,msg){gfxBusy=false;$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'انجام شد':'ناموفق بود');if(ok){$('gfxLabel').innerText='ثبت شد ✔';setTimeout(function(){closeGfx();gfxCall('launchPubg')},900)}else gfxReset()};
+(function(){var tr=$('gfxTrack'),kn=$('gfxKnob'),fill=$('gfxFill'),x0=0,on=false,max=0;function pos(e){return(e.touches?e.touches[0].clientX:e.clientX)}function down(e){if(gfxBusy||!gfxRefresh()){if(!gfxBusy)showError('ابتدا Shizuku را اجرا و مجوز آن را بده.');return}on=true;x0=pos(e)-kn.offsetLeft;max=tr.clientWidth-kn.offsetWidth-5;kn.style.transition='none';e.preventDefault()}function move(e){if(!on)return;var x=Math.max(5,Math.min(max,pos(e)-x0));kn.style.left=x+'px';fill.style.width=(x+27)+'px';e.preventDefault()}function up(){if(!on)return;on=false;if(kn.offsetLeft>=max-8){kn.style.left=max+'px';fill.style.width='100%';tr.classList.add('done');$('gfxLabel').innerText='در حال اعمال…';gfxBusy=true;var r=gfxCall('applyPubgFps',[7]);if(r===undefined){window.onFpsResult(false,'پل Shizuku در این نسخه در دسترس نیست.')}else if(typeof r==='string'&&r&&r!=='pending'){window.onFpsResult(false,r)}}else gfxReset()}kn.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);kn.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up)})();
 function scheduleRender(){if(!sheetOpen||rt)return;rt=setTimeout(function(){rt=null;renderList()},500)}
 function setFilter(f){filter=f;['All','V4','V6'].forEach(function(x){$('ch'+x).classList.toggle('on',(x==='All'?'all':x.toLowerCase())===f)});renderList()}
 function scanUi(){var done=scanTotal-scanPending,info=$('scanInfo'),bar=$('progBar');if(scanRunning){bar.style.width=(scanTotal?done/scanTotal*100:0)+'%';info.innerText=t('در حال اسکن… ','Scanning… ','جارٍ الفحص… ')+done+'/'+scanTotal}else{bar.style.width='0';var ok=uniq().filter(function(a){return scanResults[a]&&scanResults[a].ok}).length;info.innerText=t('پاسخ‌گو: ','Responsive: ','المستجيبة: ')+ok+'/'+uniq().length}}
