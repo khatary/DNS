@@ -41,6 +41,8 @@ public final class ShizukuFpsBridge {
             return;
         }
         try {
+            // Verify the real read/write path and temporary-file capability without altering the save.
+            runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && test -w '/storage/emulated/0/Android/data/com.tencent.ig/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames' && touch '" + TEMP + "' && rm -f '" + TEMP + "'");
             byte[] data = readSave();
             int fpsLevel = countIntProperty(data, "FPSLevel");
             int battle = countIntProperty(data, "BattleFPS");
@@ -50,7 +52,7 @@ public final class ShizukuFpsBridge {
                 callback.done(false, "فایل خوانده شد، اما تگ‌های اصلی FPSLevel و BattleFPS در فایل PUBG Global پیدا نشدند؛ هیچ تغییری انجام نشد.");
                 return;
             }
-            callback.done(true, "دسترسی فایل تأیید شد. Active.sav خوانده شد و تگ‌های اصلی FPS پیدا شدند (FPSLevel: " + fpsLevel + "، BattleFPS: " + battle + "، LobbyFPS: " + lobby + "، MainCityFPS: " + city + ").");
+            callback.done(true, "دسترسی خواندن و نوشتن تأیید شد. Active.sav خوانده شد و تگ‌های اصلی FPS پیدا شدند (FPSLevel: " + fpsLevel + "، BattleFPS: " + battle + "، LobbyFPS: " + lobby + "، MainCityFPS: " + city + ").");
         } catch (Throwable e) {
             callback.done(false, "خواندن Active.sav ناموفق بود: " + safeMessage(e));
         }
