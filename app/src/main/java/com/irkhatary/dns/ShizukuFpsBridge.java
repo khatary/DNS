@@ -42,6 +42,7 @@ public final class ShizukuFpsBridge {
             return;
         }
         try {
+            ensureGameClosed();
             // Verify the real read/write path and temporary-file capability without altering the save.
             runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && test -w '/storage/emulated/0/Android/data/com.tencent.ig/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames' && touch '" + TEMP + "' && rm -f '" + TEMP + "'");
             byte[] data = readSave();
@@ -76,6 +77,7 @@ public final class ShizukuFpsBridge {
         boolean backupCreated = false;
         boolean writeAttempted = false;
         try {
+            ensureGameClosed();
             byte[] original = readSave();
             if (!isGvas(original)) {
                 callback.done(false, "فایل Active.sav معتبر نیست یا قالب آن پشتیبانی نمی‌شود؛ فایل تغییر نکرد.");
@@ -121,6 +123,11 @@ public final class ShizukuFpsBridge {
             try { runChecked("rm -f '" + TEMP + "'"); } catch (Throwable ignored) {}
             callback.done(false, "اعمال FPS ناموفق بود: " + safeMessage(e) + restore);
         }
+    }
+
+    private static void ensureGameClosed() throws Exception {
+        String pids = new String(runBytes("pidof com.tencent.ig 2>/dev/null || true"), StandardCharsets.UTF_8).trim();
+        if (!pids.isEmpty()) throw new Exception("PUBG هنوز در حال اجراست؛ بازی را کامل ببند و دوباره بررسی کن.");
     }
 
     private static byte[] readSave() throws Exception {
