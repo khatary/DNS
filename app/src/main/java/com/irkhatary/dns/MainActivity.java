@@ -62,7 +62,8 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        rikka.shizuku.Shizuku.addRequestPermissionResultListener(shizukuPermissionListener);\n        web = new WebView(this);
+        rikka.shizuku.Shizuku.addRequestPermissionResultListener(shizukuPermissionListener);
+        web = new WebView(this);
         web.setBackgroundColor(0xff050817);
         web.getSettings().setJavaScriptEnabled(true);
         // Keep file access enabled only because the UI is bundled in android_asset;
@@ -331,7 +332,9 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
-        try { rikka.shizuku.Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener); } catch (Exception ignored) {}\n        gfxExecutor.shutdownNow();\n        try { unregisterReceiver(stateReceiver); } catch (Exception ignored) {}
+        try { rikka.shizuku.Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener); } catch (Exception ignored) {}
+        gfxExecutor.shutdownNow();
+        try { unregisterReceiver(stateReceiver); } catch (Exception ignored) {}
         if (web != null) web.destroy();
         super.onDestroy();
     }
