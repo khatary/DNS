@@ -199,7 +199,7 @@ public final class ShizukuFpsBridge {
     }
 
     private static void runChecked(String command) throws Exception {
-        Process p = newProcess("sh -c " + quoteForShell(command));
+        Process p = newProcess(command);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (InputStream in = p.getInputStream()) {
             byte[] buffer = new byte[2048];
@@ -226,10 +226,6 @@ public final class ShizukuFpsBridge {
 
     private static Process newProcess(String command) throws Exception {
         return Shizuku.newProcess(new String[]{"sh", "-c", command}, null, null);
-    }
-
-    private static String quoteForShell(String command) {
-        return "'" + command.replace("'", "'\\''") + "'";
     }
 
     private static String safeMessage(Throwable e) {
