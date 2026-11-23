@@ -12,5 +12,5 @@
         <service android:name=".DnsVpnService" android:permission="android.permission.BIND_VPN_SERVICE" android:foregroundServiceType="systemExempted" android:exported="false">
             <intent-filter><action android:name="android.net.VpnService"/></intent-filter>
         </service>
-    </application>
+        <provider android:name="rikka.shizuku.ShizukuProvider" android:authorities="${applicationId}.shizuku" android:exported="true" android:multiprocess="false" android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />\n    </application>
 </manifest>
