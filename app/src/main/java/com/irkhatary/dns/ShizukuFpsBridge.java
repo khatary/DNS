@@ -32,7 +32,7 @@ public final class ShizukuFpsBridge {
             Process writer = Shizuku.newProcess(new String[]{"sh", "-c", "cat > '" + TEMP + "'"}, null, null);
             try (OutputStream out = writer.getOutputStream()) { out.write(data); }
             if (writer.waitFor() != 0) throw new Exception("نوشتن فایل موقت ناموفق بود");
-            runChecked(new String[]{"sh", "-c", "cp '" + TEMP + "' '" + SAVE + "' && rm -f '" + TEMP + "'"});
+            runChecked(new String[]{"sh", "-c", "cat '" + TEMP + "' > '" + SAVE + "' && rm -f '" + TEMP + "'"});
             callback.done(true, "تنظیم FPS ثبت شد؛ نسخه بازی ممکن است سقف 120 را پشتیبانی نکند. ورود به PUBG…");
         } catch (Throwable e) {
             callback.done(false, "اعمال تنظیمات ناموفق: " + (e.getMessage() == null ? "خطای Shizuku" : e.getMessage()));
