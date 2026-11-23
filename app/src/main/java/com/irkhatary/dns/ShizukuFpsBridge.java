@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.lang.reflect.Method;
 import rikka.shizuku.Shizuku;
 
 /**
@@ -227,7 +228,11 @@ public final class ShizukuFpsBridge {
     }
 
     private static Process newProcess(String command) throws Exception {
-        return Shizuku.newProcess(new String[]{"sh", "-c", command}, null, null);
+        // Shizuku's newProcess is private in API 13; invoke the supported
+        // implementation reflectively, as required by the Shizuku API.
+        Method method = Shizuku.class.getDeclaredMethod("newProcess", String[].class, String[].class, String.class);
+        method.setAccessible(true);
+        return (Process) method.invoke(null, new String[]{"sh", "-c", command}, null, null);
     }
 
     private static String safeMessage(Throwable e) {
