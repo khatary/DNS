@@ -30,7 +30,7 @@ public final class ShizukuFpsBridge {
             for (String name : new String[]{"FPSLevel", "BattleFPS", "LobbyFPS", "MainCityFPS"}) changed += patchInt(data, name, level);
             if (changed == 0) { callback.done(false, "گزینه FPS در فایل این نسخه از PUBG پیدا نشد؛ فایل تغییر نکرد."); return; }
             runChecked(new String[]{"sh", "-c", "cp '" + SAVE + "' '" + SAVE + ".irkhatary.bak' && chmod 600 '" + SAVE + ".irkhatary.bak'"});
-            Process writer = Shizuku.newProcess(new String[]{"sh", "-c", "cat > '" + TEMP + "'"}, null, null);
+            Process writer = newProcess(new String[]{"sh", "-c", "cat > '" + TEMP + "'"}, null, null);
             try (OutputStream out = writer.getOutputStream()) { out.write(data); }
             if (writer.waitFor() != 0) throw new Exception("نوشتن فایل موقت ناموفق بود");
             runChecked(new String[]{"sh", "-c", "cat '" + TEMP + "' > '" + SAVE + "' && rm -f '" + TEMP + "'"});
@@ -47,7 +47,7 @@ public final class ShizukuFpsBridge {
     }
 
     private static int patchInt(byte[] d, String name, int value) {
-        byte[] key = (name + "\\0").getBytes(StandardCharsets.UTF_8);
+        byte[] key = (name + "\0").getBytes(StandardCharsets.UTF_8);
         int count = 0;
         ByteBuffer b = ByteBuffer.wrap(d).order(ByteOrder.LITTLE_ENDIAN);
         for (int i = 0; i <= d.length - key.length - 12; i++) {
@@ -72,14 +72,14 @@ public final class ShizukuFpsBridge {
     }
 
     private static byte[] runBytes(String[] cmd) throws Exception {
-        Process p = Shizuku.newProcess(cmd);
+        Process p = newProcess(cmd);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (InputStream in = p.getInputStream()) { byte[] buf = new byte[8192]; int n; while ((n=in.read(buf))>0) out.write(buf,0,n); }
         if (p.waitFor() != 0) throw new Exception("خواندن فایل ذخیره بازی ناموفق بود");
         return out.toByteArray();
     }
     private static void runChecked(String[] cmd) throws Exception {
-        Process p = Shizuku.newProcess(cmd, null, null);
+        Process p = newProcess(cmd, null, null);
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         try (InputStream in = p.getErrorStream()) { byte[] buf = new byte[2048]; int n; while ((n=in.read(buf))>0) err.write(buf,0,n); }
         if (p.waitFor() != 0) throw new Exception(err.toString("UTF-8"));
