@@ -36,6 +36,18 @@ public class MainActivity extends Activity {
     private static final String CHANNEL_ID = "irkhatary_dns_status";
     private static final int NOTIFICATION_ID = 8152;
     private static final int FIRST_NOTIFICATION_PERMISSION_REQUEST = 703;
+    private static final int SHIZUKU_REQUEST_CODE = 1200;
+    private final java.util.concurrent.ExecutorService gfxExecutor = Executors.newSingleThreadExecutor();
+    private final rikka.shizuku.Shizuku.OnRequestPermissionResultListener shizukuPermissionListener =
+        new rikka.shizuku.Shizuku.OnRequestPermissionResultListener() {
+            @Override public void onRequestPermissionResult(int requestCode, int grantResult) {
+                if (requestCode != SHIZUKU_REQUEST_CODE) return;
+                final boolean granted = grantResult == PackageManager.PERMISSION_GRANTED;
+                runOnUiThread(new Runnable() { @Override public void run() {
+                    if (web != null) web.evaluateJavascript("window.onShizukuPermissionResult(" + granted + ")", null);
+                }});
+            }
+        };
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (web != null) {
@@ -50,7 +62,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        web = new WebView(this);
+        rikka.shizuku.Shizuku.addRequestPermissionResultListener(shizukuPermissionListener);\n        web = new WebView(this);
         web.setBackgroundColor(0xff050817);
         web.getSettings().setJavaScriptEnabled(true);
         // Keep file access enabled only because the UI is bundled in android_asset;
@@ -89,6 +101,48 @@ public class MainActivity extends Activity {
     }
 
     public class Bridge {
+        @android.webkit.JavascriptInterface public String shizukuStatus() {
+            try {
+                if (!rikka.shizuku.Shizuku.pingBinder()) return "unavailable";
+                return rikka.shizuku.Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED ? "granted" : "denied";
+            } catch (Throwable e) { return "unavailable"; }
+        }
+        @android.webkit.JavascriptInterface public void requestShizuku() {
+            runOnUiThread(new Runnable() { @Override public void run() {
+                try {
+                    if (!rikka.shizuku.Shizuku.pingBinder()) {
+                        Intent shizuku = getPackageManager().getLaunchIntentForPackage("moe.shizuku.ori");
+                        if (shizuku != null) startActivity(shizuku);
+                        else startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://shizuku.rikka.app/")));
+                        if (web != null) web.evaluateJavascript("window.onShizukuPermissionResult(false,'unavailable')", null);
+                        return;
+                    }
+                    if (rikka.shizuku.Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                        if (web != null) web.evaluateJavascript("window.onShizukuPermissionResult(true)", null);
+                    } else {
+                        rikka.shizuku.Shizuku.requestPermission(SHIZUKU_REQUEST_CODE);
+                    }
+                } catch (Throwable e) {
+                    if (web != null) web.evaluateJavascript("window.onShizukuPermissionResult(false)", null);
+                    Toast.makeText(MainActivity.this, "درخواست مجوز Shizuku ناموفق بود", Toast.LENGTH_LONG).show();
+                }
+            }});
+        }
+        @android.webkit.JavascriptInterface public String applyPubgFps(final int level) {
+            if (level < 1 || level > 7) return "مقدار FPS نامعتبر است";
+            if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
+            if (!shizukuStatus().equals("granted")) return "Shizuku فعال نیست";
+            gfxExecutor.execute(new Runnable() { @Override public void run() {
+                ShizukuFpsBridge.apply(level, new ShizukuFpsBridge.Result() {
+                    @Override public void done(final boolean ok, final String message) {
+                        runOnUiThread(new Runnable() { @Override public void run() {
+                            if (web != null) web.evaluateJavascript("window.onFpsResult(" + ok + "," + JSONObjectQuote(message) + ")", null);
+                        }});
+                    }
+                });
+            }});
+            return "pending";
+        }
         @android.webkit.JavascriptInterface public String getVpnState() {
             boolean active = DnsVpnService.tunnelActive;
             long elapsed = active ? Math.max(0L, System.currentTimeMillis() - DnsVpnService.tunnelStartedAt) : 0L;
@@ -277,7 +331,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
-        try { unregisterReceiver(stateReceiver); } catch (Exception ignored) {}
+        try { rikka.shizuku.Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener); } catch (Exception ignored) {}\n        gfxExecutor.shutdownNow();\n        try { unregisterReceiver(stateReceiver); } catch (Exception ignored) {}
         if (web != null) web.destroy();
         super.onDestroy();
     }
