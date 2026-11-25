@@ -290,7 +290,7 @@ function closeOps(){$('opPage').classList.remove('show')}
 function $(i){return document.getElementById(i)}
 function t(fa,en,ar){return lang==='fa'?fa:(lang==='ar'?ar:en)}
 function isIpv4(v){var p=(v||'').trim().split('.');return p.length===4&&p.every(function(x){x=x.trim();return x.length>0&&x.length<=3&&Number.isInteger(+x)&&+x>=0&&+x<=255})}
-function isIpv6(v){v=(v||'').trim();return v.indexOf(':')>0&&/^[0-9a-f:]+$/i.test(v)&&v.indexOf(':::')<0}
+function isIpv6(v){v=(v||'').trim();return v.indexOf(':')>=0&&/^[0-9a-f:]+$/i.test(v)&&v.indexOf(':::')<0}
 function escHtml(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function activePair(s){if($('ipv6').checked){if(s.family===6)return {a:s.a,b:s.b,family:6};if(s.v6a&&s.v6b)return {a:s.v6a,b:s.v6b,family:6}}return {a:s.a,b:s.b,family:s.family||4}}
 function activeFamily(s){return activePair(s).family}
@@ -349,7 +349,7 @@ var toastT=null;function showError(m){var e=$('toast');e.style.display='block';e
 function openSocial(e,url){e.preventDefault();try{if(AndroidApp.openUrl)AndroidApp.openUrl(url);else window.location.href=url}catch(err){window.location.href=url}}
 window.onerror=function(message){try{showError(t('خطای رابط برنامه: ','App interface error: ','خطأ في واجهة التطبيق: ')+message)}catch(e){}};
 $('srvList').addEventListener('click',function(e){var r=e.target.closest('.row');if(r)pickServer(r.getAttribute('data-k'))});
-loadPrefs();updatePicker();updateHud();setLanguage(lang);tick();setTimeout(syncVpnState,0);window.addEventListener('pageshow',syncVpnState);previousIpv6=$('ipv6').checked;timerLoop=setInterval(tick,1000);
+loadPrefs();if($('ipv6').checked&&!(servers[provider].family===6||servers[provider].v6a&&servers[provider].v6b))provider='google';updatePicker();updateHud();setLanguage(lang);tick();setTimeout(syncVpnState,0);window.addEventListener('pageshow',syncVpnState);previousIpv6=$('ipv6').checked;timerLoop=setInterval(tick,1000);
 setTimeout(function(){scanAll(true)},250);
 setInterval(function(){if(connected&&!scanRunning){try{AndroidApp.scanDns(servers[provider].a)}catch(e){}}},3000);
 </script></body></html>
