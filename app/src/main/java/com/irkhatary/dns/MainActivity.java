@@ -301,10 +301,18 @@ public class MainActivity extends Activity {
     }
 
     private void showStatusNotification(boolean connected) {
-        // The persistent VPN notification already reports the active DNS optimizer.
-        // Remove the redundant "DNS connected/disconnected" notification.
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         NotificationManager nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        if (nm != null) nm.cancel(NOTIFICATION_ID);
+        if (nm == null) return;
+        if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(new NotificationChannel(CHANNEL_ID, "DNS connection status", NotificationManager.IMPORTANCE_LOW));
+        Intent launch = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, launch, (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0) | PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL_ID) : new Notification.Builder(this);
+        builder.setSmallIcon(com.irkhatary.dns.R.drawable.irk_icon)
+                .setContentTitle("IR_Khatary DNS")
+                .setContentText(connected ? "DNS connected" : "DNS disconnected")
+                .setContentIntent(pi).setAutoCancel(true);
+        nm.notify(NOTIFICATION_ID, builder.build());
     }
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
