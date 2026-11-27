@@ -78,149 +78,40 @@ public final class ShizukuFpsBridge {
     }
 
     /** Applies the graphics profile values observed in the user's supplied Active.sav files. */
-    public static void applyRenderQuality(String version, String quality, Result callback) {
+    /** Replaces the complete Active.sav with the selected supplied profile. */
+    public static void applyRenderQuality(String version, String quality, byte[] profile, Result callback) {
         selectGame(version);
         if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست."); return; }
         if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است."); return; }
-
-        int enumValue;
-        if ("flash".equalsIgnoreCase(quality)) enumValue = 1;
-        else if ("smooth".equalsIgnoreCase(quality)) enumValue = 2;
-        else if ("balanced".equalsIgnoreCase(quality)) enumValue = 3;
-        else if ("hd".equalsIgnoreCase(quality)) enumValue = 4;
-        else if ("hdr".equalsIgnoreCase(quality)) enumValue = 5;
-        else if ("ultra".equalsIgnoreCase(quality)) enumValue = 6;
-        else if ("uhd".equalsIgnoreCase(quality)) enumValue = 7;
-        else { callback.done(false, "کیفیت گرافیک نامعتبر است."); return; }
-
+        if (profile == null || profile.length < 8 || !isGvas(profile)) {
+            callback.done(false, "پروفایل انتخابی معتبر نیست؛ فایل باید GVAS و کامل باشد.");
+            return;
+        }
         boolean backupCreated = false, writeAttempted = false;
         try {
             ensureGameClosed();
             byte[] original = readSave();
-            byte[] patched = original.clone();
-
-            int battleStyle = patchInt(patched, "BattleRenderStyle", enumValue);
-            int battleQuality = patchInt(patched, "BattleRenderQuality", enumValue);
-            int lobbyStyle = patchInt(patched, "LobbyRenderStyle", enumValue);
-            int lobbyQuality = patchInt(patched, "LobbyRenderQuality", enumValue);
-            int manorQuality = patchInt(patched, "ManorRenderQuality", enumValue);
-            int mainCityValue = ("flash".equalsIgnoreCase(quality) || "smooth".equalsIgnoreCase(quality)) ? 1 : enumValue;
-            int mainCityQuality = patchInt(patched, "MainCityRenderQuality", mainCityValue);
-            int enhancedLobbyValue = "balanced".equalsIgnoreCase(quality) ? 3 : 1;
-            int enhancedLobby = patchInt(patched, "nEnhancedLobbyQuality", enhancedLobbyValue);
-
-            int fpsLevel = patchInt(patched, "FPSLevel", 7);
-            int battleFps = patchInt(patched, "BattleFPS", 7);
-            int lobbyFps = patchInt(patched, "LobbyFPS", 7);
-            int cityFps = patchInt(patched, "MainCityFPS", 7);
-
-            if (battleStyle == 0 || battleQuality == 0 || lobbyStyle == 0 || lobbyQuality == 0
-                    || manorQuality == 0 || mainCityQuality == 0 || enhancedLobby == 0
-                    || fpsLevel == 0 || battleFps == 0 || lobbyFps == 0 || cityFps == 0) {
-                callback.done(false, "تگ‌های کیفیت گرافیک یا FPS در Active.sav پیدا نشدند؛ فایل تغییر نکرد.");
-                return;
-            }
-
+            if (!isGvas(original)) throw new Exception("Active.sav فعلی معتبر نیست.");
             runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
             backupCreated = true;
             writeAttempted = true;
-            writeTemp(patched);
+            writeTemp(profile);
             runChecked("test -s '" + TEMP + "' && cat '" + TEMP + "' > '" + SAVE + "' && sync");
-            if (!Arrays.equals(patched, readSave())) throw new Exception("تأیید دوبارهٔ فایل پس از ثبت کیفیت و 120 FPS ناموفق بود.");
+            if (!Arrays.equals(profile, readSave())) throw new Exception("محتوای Active.sav پس از جایگزینی با پروفایل انتخابی برابر نیست.");
             runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "کیفیت " + quality.toUpperCase() + " و تگ‌های FPS (120 FPS) در Active.sav نسخه " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شدند. بکاپ ساخته شد.");
+            callback.done(true, "پروفایل کامل " + quality.toUpperCase() + " با نام Active.sav در نسخه " + GAME_PACKAGE + " جایگزین و با مقایسه بایت‌به‌بایت تأیید شد. بکاپ قبلی حفظ شد.");
         } catch (Throwable e) {
             String restore = "";
             if (backupCreated && writeAttempted) {
                 try {
                     runChecked("cat '" + BACKUP + "' > '" + SAVE + "' && sync");
                     if (!Arrays.equals(readSave(), readBackup())) throw new Exception("backup verify failed");
-                    restore = " فایل اصلی از بکاپ بازیابی شد.";
+                    restore = " فایل قبلی از بکاپ بازیابی شد.";
                 } catch (Throwable x) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ حفظ شده است."; }
             }
             try { runChecked("rm -f '" + TEMP + "'"); } catch (Throwable ignored) {}
-            callback.done(false, "اعمال کیفیت گرافیک ناموفق بود: " + safeMessage(e) + restore);
+            callback.done(false, "جایگزینی پروفایل ناموفق بود: " + safeMessage(e) + restore);
         }
-    }
-
-    /** Applies Flash's observed profile values and enables its Flash-only flag. */
-    public static void applyFlashQuality(Result callback) { applyFlashQuality("global", callback); }
-    public static void applyFlashQuality(String version, Result callback) {
-        selectGame(version);
-        if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست؛ Shizuku را اجرا کن."); return; }
-        if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است؛ ابتدا مجوز را بگیر."); return; }
-        boolean backupCreated = false, writeAttempted = false;
-        try {
-            ensureGameClosed();
-            byte[] original = readSave();
-            if (!isGvas(original)) { callback.done(false, "Active.sav معتبر نیست؛ فایل تغییر نکرد."); return; }
-            byte[] patched = original.clone();
-
-            int battleStyle = patchInt(patched, "BattleRenderStyle", 1);
-            int battleQuality = patchInt(patched, "BattleRenderQuality", 1);
-            int lobbyStyle = patchInt(patched, "LobbyRenderStyle", 1);
-            int lobbyQuality = patchInt(patched, "LobbyRenderQuality", 1);
-            int manorQuality = patchInt(patched, "ManorRenderQuality", 1);
-            int mainCityQuality = patchInt(patched, "MainCityRenderQuality", 1);
-            int enhancedLobby = patchInt(patched, "nEnhancedLobbyQuality", 1);
-            int fpsLevel = patchInt(patched, "FPSLevel", 7);
-            int battleFps = patchInt(patched, "BattleFPS", 7);
-            int lobbyFps = patchInt(patched, "LobbyFPS", 7);
-            int cityFps = patchInt(patched, "MainCityFPS", 7);
-            int flashFlag = patchBool(patched, "bFlashOnlyQuality", true);
-
-            if (battleStyle == 0 || battleQuality == 0 || lobbyStyle == 0 || lobbyQuality == 0
-                    || manorQuality == 0 || mainCityQuality == 0 || enhancedLobby == 0
-                    || fpsLevel == 0 || battleFps == 0 || lobbyFps == 0 || cityFps == 0 || flashFlag == 0) {
-                callback.done(false, "تگ‌های کیفیت Flash یا FPS در Active.sav پیدا نشدند؛ فایل تغییر نکرد.");
-                return;
-            }
-            runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
-            backupCreated = true;
-            writeAttempted = true;
-            writeTemp(patched);
-            runChecked("test -s '" + TEMP + "' && cat '" + TEMP + "' > '" + SAVE + "' && sync");
-            if (!Arrays.equals(patched, readSave())) throw new Exception("بررسی فایل پس از ثبت Flash و 120 FPS ناموفق بود.");
-            runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "کیفیت Flash و 120 FPS در Active.sav نسخه " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شدند؛ بکاپ ساخته شد.");
-        } catch (Throwable e) {
-            String restore = "";
-            if (backupCreated && writeAttempted) {
-                try {
-                    runChecked("cat '" + BACKUP + "' > '" + SAVE + "' && sync");
-                    if (!Arrays.equals(readSave(), readBackup())) throw new Exception("بررسی بکاپ ناموفق");
-                    restore = " فایل اصلی از بکاپ بازیابی شد.";
-                } catch (Throwable x) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ در " + BACKUP + " باقی مانده است."; }
-            }
-            try { runChecked("rm -f '" + TEMP + "'"); } catch (Throwable ignored) {}
-            callback.done(false, "اعمال کیفیت Flash ناموفق بود: " + safeMessage(e) + restore);
-        }
-    }
-
-    /** Unreal BoolProperty stores its value byte in the property tag after size and array index. */
-    private static int patchBool(byte[] data, String name, boolean value) {
-        byte[] key = (name + "\0").getBytes(StandardCharsets.UTF_8);
-        ByteBuffer b = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
-        int count = 0;
-        for (int i = 0; i <= data.length - key.length - 22; i++) {
-            boolean match = true;
-            for (int j = 0; j < key.length; j++) if (data[i + j] != key[j]) { match = false; break; }
-            if (!match) continue;
-            int p = i + key.length;
-            if (p + 4 > data.length) continue;
-            int typeLen = b.getInt(p);
-            if (typeLen != 13 || p + 4 + typeLen + 9 > data.length) continue;
-            String type = new String(data, p + 4, typeLen - 1, StandardCharsets.UTF_8);
-            if (!"BoolProperty".equals(type)) continue;
-            p += 4 + typeLen;
-            int size = b.getInt(p); p += 4;
-            if (size != 0 || p + 5 > data.length) continue;
-            p += 4; // array index
-            data[p] = (byte)(value ? 1 : 0);
-            count++;
-            i = p;
-        }
-        return count;
     }
 
     public static void apply(final int level, Result callback) { apply(level, "global", callback); }
