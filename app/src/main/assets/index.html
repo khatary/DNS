@@ -291,7 +291,7 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <script>
 function syncVpnState(){try{if(!window.AndroidApp||!AndroidApp.getVpnState)return;var raw=AndroidApp.getVpnState();if(!raw)return;var p=raw.split('|');var active=p[0]==='true';var elapsed=parseInt(p[1]||'0',10)||0;if(active){var a=p[2],b=p[3];Object.keys(servers).some(function(k){if(servers[k].a===a&&servers[k].b===b){provider=k;return true}return false});resetHist();updatePicker();updateHud();}setVpnState(active,elapsed);}catch(e){}}
 function loadPubgIcon(){try{if(window.AndroidApp&&AndroidApp.getPubgIcon){var icon=null;if(icon){$('pubgIcon').src='data:image/png;base64,'+icon;}}}catch(e){}}
-function openPubg(){if(window.AndroidApp&&AndroidApp.launchPubg){AndroidApp.launchPubg();}else{window.location.href="https://play.google.com/store/apps/details?id=com.tencent.ig";}}
+function openPubg(){var v='global';try{v=localStorage.getItem('irkhatary_gfx_version')||'global'}catch(e){}if(window.AndroidApp&&AndroidApp.launchPubg){AndroidApp.launchPubg(v);}else{window.location.href="https://play.google.com/store/apps/details?id=com.tencent.ig";}}
 
 window.addEventListener('load',loadPubgIcon);
 window.addEventListener('load',function(){var splash=document.getElementById('startupSplash');window.setTimeout(function(){if(splash)splash.classList.add('hide');window.setTimeout(function(){if(splash&&splash.parentNode)splash.parentNode.removeChild(splash)},750)},4000)});var connected=false,lang='fa',provider='opendns',elapsedBase=0,connectedAt=0,timerLoop=null,filter='all',sheetOpen=false,rt=null,scanTO=null;
@@ -391,7 +391,7 @@ function gfxQualityChanged(){
 }
 window.onRenderQualityResult=function(ok,msg){
  gfxBusy=false;$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'کیفیت گرافیک ثبت و بررسی شد':'اعمال کیفیت ناموفق بود');
- if(ok){try{localStorage.setItem('irkhatary_gfx_quality',$('gfxQuality').value)}catch(e){}gfxFileReady=false;gfxRefresh()}
+ if(ok){try{localStorage.setItem('irkhatary_gfx_quality',$('gfxQuality').value)}catch(e){}gfxFileReady=false;setTimeout(function(){closeGfx();gfxCall('launchPubg',[$('gfxGameVersion').value])},900)}
 };
 function gfxVersionChanged(){gfxSaveOptions();gfxFileReady=false;gfxRefresh();if(gfxCall('shizukuStatus')==='granted')gfxCheckFile()}
 function gfxAudioChanged(){
