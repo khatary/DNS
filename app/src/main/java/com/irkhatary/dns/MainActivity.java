@@ -166,17 +166,43 @@ public class MainActivity extends Activity {
             }});
             return "pending";
         }
+        private byte[] loadQualityProfile(String quality) throws Exception {
+            String file;
+            if ("flash".equalsIgnoreCase(quality)) file = "ActiveFLASH.sav";
+            else if ("smooth".equalsIgnoreCase(quality)) file = "ActiveSMOOTH.sav";
+            else if ("balanced".equalsIgnoreCase(quality)) file = "ActiveBALANCED.sav";
+            else if ("hd".equalsIgnoreCase(quality)) file = "ActiveHD.sav";
+            else if ("hdr".equalsIgnoreCase(quality)) file = "ActiveHDR.sav";
+            else if ("ultra".equalsIgnoreCase(quality)) file = "ActiveULTRA.sav";
+            else if ("uhd".equalsIgnoreCase(quality)) file = "ActiveUHD.sav";
+            else throw new IllegalArgumentException("کیفیت انتخاب‌شده معتبر نیست");
+            java.io.InputStream in = getAssets().open("profiles/" + file);
+            try {
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                byte[] buffer = new byte[8192]; int n;
+                while ((n = in.read(buffer)) != -1) out.write(buffer, 0, n);
+                return out.toByteArray();
+            } finally { in.close(); }
+        }
         @android.webkit.JavascriptInterface public String applyPubgRenderQuality(final String version, final String quality) {
             if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
             if (!shizukuStatus().equals("granted")) return "Shizuku فعال نیست";
             gfxExecutor.execute(new Runnable() { @Override public void run() {
-                ShizukuFpsBridge.applyRenderQuality(version, quality, new ShizukuFpsBridge.Result() {
-                    @Override public void done(final boolean ok, final String message) {
-                        runOnUiThread(new Runnable() { @Override public void run() {
-                            if (web != null) web.evaluateJavascript("window.onRenderQualityResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
-                        }});
-                    }
-                });
+                try {
+                    final byte[] profile = loadQualityProfile(quality);
+                    ShizukuFpsBridge.applyRenderQuality(version, quality, profile, new ShizukuFpsBridge.Result() {
+                        @Override public void done(final boolean ok, final String message) {
+                            runOnUiThread(new Runnable() { @Override public void run() {
+                                if (web != null) web.evaluateJavascript("window.onRenderQualityResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
+                            }});
+                        }
+                    });
+                } catch (Throwable e) {
+                    final String message = "پروفایل کیفیت در برنامه پیدا نشد یا خواندن آن ناموفق بود: " + e.getMessage();
+                    runOnUiThread(new Runnable() { @Override public void run() {
+                        if (web != null) web.evaluateJavascript("window.onRenderQualityResult(false," + org.json.JSONObject.quote(message) + ")", null);
+                    }});
+                }
             }});
             return "pending";
         }
@@ -188,13 +214,21 @@ public class MainActivity extends Activity {
             if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
             if (!shizukuStatus().equals("granted")) return "Shizuku فعال نیست";
             gfxExecutor.execute(new Runnable() { @Override public void run() {
-                ShizukuFpsBridge.applyFlashQuality(version, new ShizukuFpsBridge.Result() {
-                    @Override public void done(final boolean ok, final String message) {
-                        runOnUiThread(new Runnable() { @Override public void run() {
-                            if (web != null) web.evaluateJavascript("window.onFlashQualityResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
-                        }});
-                    }
-                });
+                try {
+                    final byte[] profile = loadQualityProfile("flash");
+                    ShizukuFpsBridge.applyRenderQuality(version, "flash", profile, new ShizukuFpsBridge.Result() {
+                        @Override public void done(final boolean ok, final String message) {
+                            runOnUiThread(new Runnable() { @Override public void run() {
+                                if (web != null) web.evaluateJavascript("window.onFlashQualityResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
+                            }});
+                        }
+                    });
+                } catch (Throwable e) {
+                    final String message = "پروفایل FLASH در برنامه پیدا نشد یا خواندن آن ناموفق بود: " + e.getMessage();
+                    runOnUiThread(new Runnable() { @Override public void run() {
+                        if (web != null) web.evaluateJavascript("window.onFlashQualityResult(false," + org.json.JSONObject.quote(message) + ")", null);
+                    }});
+                }
             }});
             return "pending";
         }
