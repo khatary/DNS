@@ -83,8 +83,8 @@ public final class ShizukuFpsBridge {
         if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست."); return; }
         if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است."); return; }
         int enumValue;
-        // PUBG stores the RenderQuality enum as 1-based values: Smooth=1 through UHD=6.
-        // The previous 0-based mapping caused the game to apply the tier below the selected one.
+        // PUBG graphics tiers are 1-based: Flash=1, Smooth=2, Balanced=3,
+        // HD=4, HDR=5, Ultra=6, UHD=7. The provided files confirm the mapping.
         if ("smooth".equalsIgnoreCase(quality)) enumValue = 1;
         else if ("balanced".equalsIgnoreCase(quality)) enumValue = 2;
         else if ("hd".equalsIgnoreCase(quality)) enumValue = 3;
@@ -97,10 +97,20 @@ public final class ShizukuFpsBridge {
             ensureGameClosed();
             byte[] original = readSave();
             byte[] patched = original.clone();
+            // The supplied Active.sav files store these enums in the high byte:
+            // Smooth=0x200, Balanced=0x300, HD=0x400, HDR=0x500,
+            // Ultra=0x600, UHD=0x700. patchInt() applies this encoding.
+            int battleStyle = patchInt(patched, "BattleRenderStyle", enumValue);
             int battle = patchInt(patched, "BattleRenderQuality", enumValue);
+            int lobbyStyle = patchInt(patched, "LobbyRenderStyle", enumValue);
             int lobby = patchInt(patched, "LobbyRenderQuality", enumValue);
+            int manor = patchInt(patched, "ManorRenderQuality", enumValue);
+            int mainCityValue = ("smooth".equalsIgnoreCase(quality) || "flash".equalsIgnoreCase(quality)) ? 1 : enumValue;
+            int mainCity = patchInt(patched, "MainCityRenderQuality", mainCityValue);
+            int enhancedLobbyValue = "balanced".equalsIgnoreCase(quality) ? 3 : 1;
+            int enhancedLobby = patchInt(patched, "nEnhancedLobbyQuality", enhancedLobbyValue);
             if (battle == 0 || lobby == 0) {
-                callback.done(false, "تگ‌های BattleRenderQuality و LobbyRenderQuality در فایل این نسخه پیدا نشدند؛ هیچ تغییری انجام نشد.");
+                callback.done(false, "تگ‌های اصلی BattleRenderQuality و LobbyRenderQuality در فایل این نسخه پیدا نشدند؛ هیچ تغییری انجام نشد.");
                 return;
             }
             runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
@@ -134,8 +144,20 @@ public final class ShizukuFpsBridge {
             byte[] original = readSave();
             if (!isGvas(original)) { callback.done(false, "Active.sav معتبر نیست؛ فایل تغییر نکرد."); return; }
             byte[] patched = original.clone();
+            // Flash is the first graphics tier in the supplied profile files.
+            // Apply its actual serialized quality values as well as the Flash flag.
+            int battleStyle = patchInt(patched, "BattleRenderStyle", 1);
+            int battleQuality = patchInt(patched, "BattleRenderQuality", 1);
+            int lobbyStyle = patchInt(patched, "LobbyRenderStyle", 1);
+            int lobbyQuality = patchInt(patched, "LobbyRenderQuality", 1);
+            int manorQuality = patchInt(patched, "ManorRenderQuality", 1);
+            int mainCityQuality = patchInt(patched, "MainCityRenderQuality", 1);
+            int enhancedLobby = patchInt(patched, "nEnhancedLobbyQuality", 1);
             int changed = patchBool(patched, "bFlashOnlyQuality", true);
-            if (changed == 0) { callback.done(false, "تگ bFlashOnlyQuality در Active.sav پیدا نشد؛ فایل تغییر نکرد."); return; }
+            if (battleQuality == 0 || lobbyQuality == 0 || changed == 0) {
+                callback.done(false, "تگ‌های کیفیت Flash در Active.sav پیدا نشدند؛ فایل تغییر نکرد.");
+                return;
+            }
             runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
             backupCreated = true;
             writeAttempted = true;
@@ -307,7 +329,9 @@ public final class ShizukuFpsBridge {
             p += 4;
             if (size != 4 || p + 8 > data.length) continue;
             p += 4; // array index
-            if (write) b.putInt(p, value);
+            // Unreal enum values in the supplied PUBG GVAS files are stored
+            // as the enum ordinal shifted into bits 8..15 (e.g. 7 -> 00 07 00 00).
+            if (write) b.putInt(p, value << 8);
             count++;
             i = p + 3;
         }
