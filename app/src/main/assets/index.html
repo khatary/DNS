@@ -438,8 +438,8 @@ window.onFpsResult=function(ok,msg){
    else if(typeof r==='string'&&r&&r!=='pending')window.onFpsResult(false,r)
   }else gfxReset()
  }
- kn.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
- kn.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up)
+ tr.addEventListener('touchstart',down,{passive:false});window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+ tr.addEventListener('mousedown',down);window.addEventListener('mousemove',move);window.addEventListener('mouseup',up)
 })();
 function scheduleRender(){if(!sheetOpen||rt)return;rt=setTimeout(function(){rt=null;renderList()},500)}
 function setFilter(f){filter=f;['All','V4','V6','Custom'].forEach(function(x){var id=x==='Custom'?'chCustom':'ch'+x;if($(id))$(id).classList.toggle('on',(x==='All'?'all':(x==='Custom'?'custom':x.toLowerCase()))===f)});renderList()}
