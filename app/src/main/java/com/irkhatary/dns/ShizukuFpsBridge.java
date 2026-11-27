@@ -83,12 +83,14 @@ public final class ShizukuFpsBridge {
         if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست."); return; }
         if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است."); return; }
         int enumValue;
-        if ("smooth".equalsIgnoreCase(quality)) enumValue = 0;
-        else if ("balanced".equalsIgnoreCase(quality)) enumValue = 1;
-        else if ("hd".equalsIgnoreCase(quality)) enumValue = 2;
-        else if ("hdr".equalsIgnoreCase(quality)) enumValue = 3;
-        else if ("ultra".equalsIgnoreCase(quality)) enumValue = 4;
-        else if ("uhd".equalsIgnoreCase(quality)) enumValue = 5;
+        // PUBG stores the RenderQuality enum as 1-based values: Smooth=1 through UHD=6.
+        // The previous 0-based mapping caused the game to apply the tier below the selected one.
+        if ("smooth".equalsIgnoreCase(quality)) enumValue = 1;
+        else if ("balanced".equalsIgnoreCase(quality)) enumValue = 2;
+        else if ("hd".equalsIgnoreCase(quality)) enumValue = 3;
+        else if ("hdr".equalsIgnoreCase(quality)) enumValue = 4;
+        else if ("ultra".equalsIgnoreCase(quality)) enumValue = 5;
+        else if ("uhd".equalsIgnoreCase(quality)) enumValue = 6;
         else { callback.done(false, "کیفیت Flash باید از مسیر جداگانه اعمال شود."); return; }
         boolean backupCreated = false, writeAttempted = false;
         try {
