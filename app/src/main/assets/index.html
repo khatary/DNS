@@ -268,9 +268,9 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <div class="gfx-shz-badge" id="gfxShzBadge">Shizuku: قطع</div>
 <div class="gfx-hero"><div class="gfx-glow"></div><h1>GFX TOOL</h1><div class="gfx-sub">PUBG MOBILE</div></div>
 <div class="gfx-options">
-<div class="gfx-option"><label data-fa="نسخه پابجی" data-en="PUBG version" data-ar="إصدار ببجي">نسخه پابجی</label><select id="gfxGameVersion" class="gfx-native-select" onchange="gfxSaveOptions()"><option value="global">global</option><option value="flash">flash</option><option value="korea">korea</option><option value="india">india</option></select><div class="gfx-choice" data-target="gfxGameVersion"><button type="button" data-value="global" data-fa="GLOBAL" data-en="GLOBAL" data-ar="عالمي">GLOBAL</button><button type="button" data-value="flash" data-fa="FLASH" data-en="FLASH" data-ar="فلاش">FLASH</button><button type="button" data-value="korea" data-fa="KOREA" data-en="KOREA" data-ar="كوري">KOREA</button><button type="button" data-value="india" data-fa="INDIA" data-en="INDIA" data-ar="الهند">INDIA</button></div></div>
+<div class="gfx-option"><label data-fa="نسخه پابجی" data-en="PUBG version" data-ar="إصدار ببجي">نسخه پابجی</label><select id="gfxGameVersion" class="gfx-native-select" onchange="gfxVersionChanged()"><option value="global">global</option><option value="flash">flash</option><option value="korea">korea</option><option value="india">india</option></select><div class="gfx-choice" data-target="gfxGameVersion"><button type="button" data-value="global" data-fa="GLOBAL" data-en="GLOBAL" data-ar="عالمي">GLOBAL</button><button type="button" data-value="flash" data-fa="FLASH" data-en="FLASH" data-ar="فلاش">FLASH</button><button type="button" data-value="korea" data-fa="KOREA" data-en="KOREA" data-ar="كوري">KOREA</button><button type="button" data-value="india" data-fa="INDIA" data-en="INDIA" data-ar="الهند">INDIA</button></div></div>
 <div class="gfx-option"><label data-fa="کیفیت گرافیک" data-en="Graphics quality" data-ar="جودة الرسومات">کیفیت گرافیک</label><select id="gfxQuality" class="gfx-native-select" onchange="gfxQualityChanged()"><option value="flash">flash</option><option value="smooth">smooth</option><option value="balanced">balanced</option><option value="hd">hd</option><option value="hdr">hdr</option><option value="ultra">ultra</option><option value="uhd">uhd</option></select><div class="gfx-choice" data-target="gfxQuality"><button type="button" data-value="flash" data-fa="FLASH" data-en="FLASH" data-ar="فلاش">FLASH</button><button type="button" data-value="smooth" data-fa="SMOOTH" data-en="SMOOTH" data-ar="سلس">SMOOTH</button><button type="button" data-value="balanced" data-fa="BALANCED" data-en="BALANCED" data-ar="متوازن">BALANCED</button><button type="button" data-value="hd" data-fa="HD" data-en="HD" data-ar="HD">HD</button><button type="button" data-value="hdr" data-fa="HDR" data-en="HDR" data-ar="HDR">HDR</button><button type="button" data-value="ultra" data-fa="ULTRA" data-en="ULTRA" data-ar="فائق">ULTRA</button><button type="button" data-value="uhd" data-fa="UHD" data-en="UHD" data-ar="UHD">UHD</button></div></div>
-<div class="gfx-option"><label data-fa="کیفیت صدا" data-en="Audio quality" data-ar="جودة الصوت">کیفیت صدا</label><select id="gfxAudio" class="gfx-native-select" onchange="gfxSaveOptions()"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select><div class="gfx-choice" data-target="gfxAudio"><button type="button" data-value="low" data-fa="LOW" data-en="LOW" data-ar="منخفض">LOW</button><button type="button" data-value="medium" data-fa="MEDIUM" data-en="MEDIUM" data-ar="متوسط">MEDIUM</button><button type="button" data-value="high" data-fa="HIGH" data-en="HIGH" data-ar="مرتفع">HIGH</button></div></div></div>
+<div class="gfx-option"><label data-fa="کیفیت صدا" data-en="Audio quality" data-ar="جودة الصوت">کیفیت صدا</label><select id="gfxAudio" class="gfx-native-select" onchange="gfxAudioChanged()"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select><div class="gfx-choice" data-target="gfxAudio"><button type="button" data-value="low" data-fa="LOW" data-en="LOW" data-ar="منخفض">LOW</button><button type="button" data-value="medium" data-fa="MEDIUM" data-en="MEDIUM" data-ar="متوسط">MEDIUM</button><button type="button" data-value="high" data-fa="HIGH" data-en="HIGH" data-ar="مرتفع">HIGH</button></div></div></div>
 <div class="gfx-fps-title" data-fa="انتخاب FPS" data-en="FPS selection" data-ar="اختيار FPS">انتخاب FPS</div><div class="gfx-fps-choice"><button class="gfx-fps-btn" id="gfxFps60" onclick="gfxSelectFps(5)">60 FPS</button><button class="gfx-fps-btn" id="gfxFps90" onclick="gfxSelectFps(6)">90 FPS</button><button class="gfx-fps-btn selected" id="gfxFps120" onclick="gfxSelectFps(7)">120 FPS</button></div><div class="gfx-fps-slider-wrap"><input id="gfxFpsSlider" class="gfx-fps-slider" type="range" min="5" max="7" step="1" value="7" aria-label="FPS slider" oninput="gfxSelectFps(Number(this.value))"><div class="gfx-slider-labels"><span>60 FPS</span><span>90 FPS</span><span>120 FPS</span></div></div>
 <div class="gfx-card"><div class="gfx-row"><span>Shizuku</span><b id="gfxShz" class="bad">—</b></div><div class="gfx-row"><span>PUBG MOBILE</span><b id="gfxGame" class="bad">—</b></div><button class="gfx-perm" id="gfxPerm" onclick="gfxPermission()">فعال‌سازی / مجوز Shizuku</button><div class="gfx-row"><span>تنظیمات بازی</span><b id="gfxFile" class="bad">بررسی نشده</b></div><button class="gfx-perm" id="gfxFileBtn" onclick="gfxCheckFile()">آماده‌سازی تنظیمات بازی</button></div>
 <div class="gfx-hint" id="gfxHint">Shizuku را Start کن، مجوز بده و تنظیمات بازی را آماده کن.</div>
@@ -363,7 +363,7 @@ document.querySelectorAll('.gfx-choice').forEach(function(group){
   var btn=e.target.closest('button[data-value]');if(!btn)return;
   var sel=$(group.getAttribute('data-target'));if(!sel)return;
   sel.value=btn.getAttribute('data-value');
-  if(sel.id==='gfxQuality')gfxQualityChanged();else gfxSaveOptions();
+  if(sel.id==='gfxQuality')gfxQualityChanged();else if(sel.id==='gfxGameVersion')gfxVersionChanged();else if(sel.id==='gfxAudio')gfxAudioChanged();else gfxSaveOptions();
   gfxSyncChoiceGroups();
  });
 });
@@ -371,16 +371,35 @@ function gfxApplyFlashQuality(){
  if($('gfxQuality').value!=='flash'){ $('gfxRes').style.color='#ffcc66';$('gfxRes').innerText='برای اعمال این قابلیت، کیفیت Flash را انتخاب کن.';return; }
  if(!gfxRefresh()){showError('برای اعمال کیفیت Flash، Shizuku، نصب PUBG Global و بررسی تنظیمات بازی لازم است.');return}
  gfxBusy=true;$('gfxRes').style.color='#b8c5ff';$('gfxRes').innerText='در حال ثبت کیفیت Flash…';
- var r=gfxCall('applyPubgFlashQuality');
+ var r=gfxCall('applyPubgFlashQuality',[$('gfxGameVersion').value]);
  if(r===undefined){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText='پل Shizuku در دسترس نیست.'}
  else if(typeof r==='string'&&r&&r!=='pending'){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText=r}
 }
 window.onFlashQualityResult=function(ok,msg){
  gfxBusy=false;$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'کیفیت Flash ثبت شد':'اعمال کیفیت Flash ناموفق بود');
- if(ok){gfxFileReady=false;setTimeout(function(){closeGfx();gfxCall('launchPubg')},900)}
+ if(ok){gfxFileReady=false;setTimeout(function(){closeGfx();gfxCall('launchPubg',[$('gfxGameVersion').value])},900)}
 };
 function gfxSaveOptions(){try{localStorage.setItem('irkhatary_gfx_version',$('gfxGameVersion').value);localStorage.setItem('irkhatary_gfx_quality',$('gfxQuality').value);localStorage.setItem('irkhatary_gfx_audio',$('gfxAudio').value)}catch(e){}}
-function gfxQualityChanged(){gfxSaveOptions();if($('gfxQuality').value==='flash'){gfxApplyFlashQuality();}}
+function gfxQualityChanged(){
+ gfxSaveOptions();
+ if($('gfxQuality').value==='flash'){gfxApplyFlashQuality();return}
+ if(!gfxRefresh()){showError('ابتدا Shizuku، نصب نسخه انتخاب‌شده و بررسی فایل را کامل کن.');return}
+ gfxBusy=true;$('gfxRes').style.color='#b8c5ff';$('gfxRes').innerText='در حال اعمال کیفیت گرافیک در فایل بازی…';
+ var r=gfxCall('applyPubgRenderQuality',[$('gfxGameVersion').value,$('gfxQuality').value]);
+ if(r===undefined){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText='پل تنظیم کیفیت در این نسخه در دسترس نیست.'}
+ else if(typeof r==='string'&&r&&r!=='pending'){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText=r}
+}
+window.onRenderQualityResult=function(ok,msg){
+ gfxBusy=false;$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'کیفیت گرافیک ثبت و بررسی شد':'اعمال کیفیت ناموفق بود');
+ if(ok){try{localStorage.setItem('irkhatary_gfx_quality',$('gfxQuality').value)}catch(e){}gfxFileReady=false;gfxRefresh()}
+};
+function gfxVersionChanged(){gfxSaveOptions();gfxFileReady=false;gfxRefresh();if(gfxCall('shizukuStatus')==='granted')gfxCheckFile()}
+function gfxAudioChanged(){
+ gfxSaveOptions();
+ var r=gfxCall('applyPubgAudioQuality',[$('gfxGameVersion').value,$('gfxAudio').value]);
+ $('gfxRes').style.color='#ffcc66';
+ $('gfxRes').innerText=r||'کیفیت صدای انتخابی در فایل این نسخه قابل تأیید نیست؛ هیچ تغییری انجام نشد.';
+}
 function gfxLoadOptions(){try{var v=localStorage.getItem('irkhatary_gfx_version'),q=localStorage.getItem('irkhatary_gfx_quality'),a=localStorage.getItem('irkhatary_gfx_audio');if(v&&$('gfxGameVersion').querySelector('option[value="'+v+'"]'))$('gfxGameVersion').value=v;if(q&&$('gfxQuality').querySelector('option[value="'+q+'"]'))$('gfxQuality').value=q;if(a&&$('gfxAudio').querySelector('option[value="'+a+'"]'))$('gfxAudio').value=a}catch(e){}gfxSyncChoiceGroups()}
 function gfxDeviceStats(){
  var raw=gfxCall('getDeviceInfo');if(!raw)return;
@@ -404,17 +423,17 @@ function gfxShizukuBadge(){
  badge.innerText='Shizuku: '+(connected?'متصل':'قطع');
 }
 function gfxRefresh(){
- var st=gfxCall('shizukuStatus'),sh=$('gfxShz'),ok=st==='granted',game=gfxCall('pubgInstalled')===true;
+ var version=$('gfxGameVersion').value,st=gfxCall('shizukuStatus'),sh=$('gfxShz'),ok=st==='granted',game=gfxCall('pubgInstalled',[version])===true;
  gfxShizukuBadge();
  if(!ok)gfxFileReady=false;
  sh.className=ok?'ok':'bad';
  sh.innerText=st===undefined?'نسخه برنامه پشتیبانی نمی‌کند':(ok?'فعال و مجاز':(st==='unavailable'?'Shizuku اجرا نیست':'مجوز داده نشده'));
  $('gfxPerm').style.display=ok?'none':'block';
- var ge=$('gfxGame');ge.className=game?'ok':'bad';ge.innerText=game?'PUBG Global نصب است':'PUBG Global نصب نیست';
+ var ge=$('gfxGame');ge.className=game?'ok':'bad';ge.innerText=game?'نسخه انتخاب‌شده نصب است':'نسخه انتخاب‌شده نصب نیست';
  var fe=$('gfxFile');fe.className=gfxFileReady?'ok':'bad';fe.innerText=gfxFileReady?'دسترسی تأیید شد':'بررسی نشده';
  var ready=ok&&game&&gfxFileReady;
  $('gfxTrack').classList.toggle('locked',!ready);
- $('gfxHint').innerText=!ok?'Shizuku را Start کن و مجوز IR_Khatary را بده.':(!game?'نسخه PUBG Global (com.tencent.ig) نصب نیست.':(!gfxFileReady?'ابتدا «آماده‌سازی تنظیمات بازی» را بزن.':'دسترسی فایل تأیید شد؛ PUBG را کاملاً ببند و اسلایدر را بکش. پس از ثبت و تأیید، بازی خودکار باز می‌شود.'));
+ $('gfxHint').innerText=!ok?'Shizuku را Start کن و مجوز IR_Khatary را بده.':(!game?'بسته نسخه انتخاب‌شده روی دستگاه نصب نیست.':(!gfxFileReady?'ابتدا «آماده‌سازی تنظیمات بازی» را بزن.':'دسترسی فایل تأیید شد؛ PUBG را کاملاً ببند و اسلایدر را بکش. پس از ثبت و تأیید، بازی خودکار باز می‌شود.'));
  return ready
 }
 function openGfx(){$('gfxPage').classList.add('show');$('gfxRes').innerText='';try{var saved=Number(localStorage.getItem('irkhatary_gfx_fps'));if(saved===5||saved===6||saved===7)selectedGfxFps=saved}catch(e){}gfxLoadOptions();gfxSelectFps(selectedGfxFps);gfxReset();gfxRefresh()}
@@ -423,7 +442,7 @@ function gfxPermission(){gfxCall('requestShizuku');setTimeout(gfxRefresh,700);se
 function gfxCheckFile(){
  if(gfxCall('shizukuStatus')!=='granted'){gfxFileReady=false;gfxRefresh();showError('ابتدا Shizuku را اجرا و مجوز IR_Khatary را بده.');return}
  gfxFileReady=false;$('gfxFile').className='bad';$('gfxFile').innerText='در حال بررسی…';$('gfxRes').innerText='';
- var r=gfxCall('checkPubgSave');
+ var r=gfxCall('checkPubgSave',[$('gfxGameVersion').value]);
  if(r===undefined){window.onFpsFileCheck(false,'نسخه برنامه از بررسی فایل پشتیبانی نمی‌کند.')}
  else if(typeof r==='string'&&r&&r!=='pending'){window.onFpsFileCheck(false,r)}
 }
@@ -456,7 +475,7 @@ window.onFpsResult=function(ok,msg){
   if(!on)return;on=false;
   if(kn.offsetLeft>=max-8){
    kn.style.left=max+'px';fill.style.width='100%';tr.classList.add('done');$('gfxLabel').innerText='در حال اعمال و بررسی…';gfxBusy=true;
-   var r=gfxCall('applyPubgFps',[selectedGfxFps]);
+   var r=gfxCall('applyPubgFps',[selectedGfxFps,$('gfxGameVersion').value]);
    if(r===undefined)window.onFpsResult(false,'پل Shizuku در این نسخه در دسترس نیست.');
    else if(typeof r==='string'&&r&&r!=='pending')window.onFpsResult(false,r)
   }else gfxReset()
