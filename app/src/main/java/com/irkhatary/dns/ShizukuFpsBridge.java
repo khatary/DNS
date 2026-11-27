@@ -77,6 +77,48 @@ public final class ShizukuFpsBridge {
         }
     }
 
+    /** Writes the game's RenderQuality enum fields only after both expected GVAS tags are found. */
+    public static void applyRenderQuality(String version, String quality, Result callback) {
+        selectGame(version);
+        if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست."); return; }
+        if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است."); return; }
+        int enumValue;
+        if ("smooth".equalsIgnoreCase(quality)) enumValue = 0;
+        else if ("balanced".equalsIgnoreCase(quality)) enumValue = 1;
+        else if ("hd".equalsIgnoreCase(quality)) enumValue = 2;
+        else if ("hdr".equalsIgnoreCase(quality)) enumValue = 3;
+        else if ("ultra".equalsIgnoreCase(quality)) enumValue = 4;
+        else if ("uhd".equalsIgnoreCase(quality)) enumValue = 5;
+        else { callback.done(false, "کیفیت Flash باید از مسیر جداگانه اعمال شود."); return; }
+        boolean backupCreated = false, writeAttempted = false;
+        try {
+            ensureGameClosed();
+            byte[] original = readSave();
+            byte[] patched = original.clone();
+            int battle = patchInt(patched, "BattleRenderQuality", enumValue);
+            int lobby = patchInt(patched, "LobbyRenderQuality", enumValue);
+            if (battle == 0 || lobby == 0) {
+                callback.done(false, "تگ‌های BattleRenderQuality و LobbyRenderQuality در فایل این نسخه پیدا نشدند؛ هیچ تغییری انجام نشد.");
+                return;
+            }
+            runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
+            backupCreated = true; writeAttempted = true;
+            writeTemp(patched);
+            runChecked("test -s '" + TEMP + "' && cat '" + TEMP + "' > '" + SAVE + "' && sync");
+            if (!Arrays.equals(patched, readSave())) throw new Exception("تأیید دوبارهٔ فایل کیفیت ناموفق بود.");
+            runChecked("rm -f '" + TEMP + "'");
+            callback.done(true, "کیفیت گرافیک در فایل " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شد (RenderQuality enum=" + enumValue + "). بکاپ ساخته شد.");
+        } catch (Throwable e) {
+            String restore = "";
+            if (backupCreated && writeAttempted) {
+                try { runChecked("cat '" + BACKUP + "' > '" + SAVE + "' && sync"); if (!Arrays.equals(readSave(), readBackup())) throw new Exception("backup verify failed"); restore = " فایل اصلی از بکاپ بازیابی شد."; }
+                catch (Throwable x) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ حفظ شده است."; }
+            }
+            try { runChecked("rm -f '" + TEMP + "'"); } catch (Throwable ignored) {}
+            callback.done(false, "اعمال کیفیت گرافیک ناموفق بود: " + safeMessage(e) + restore);
+        }
+    }
+
     /** Applies the Flash-only graphics flag independently of FPS; all existing FPS tags remain untouched. */
     public static void applyFlashQuality(Result callback) { applyFlashQuality("global", callback); }
     public static void applyFlashQuality(String version, Result callback) {
