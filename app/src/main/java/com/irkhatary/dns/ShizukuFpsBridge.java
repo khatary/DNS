@@ -60,6 +60,68 @@ public final class ShizukuFpsBridge {
         }
     }
 
+    /** Applies the Flash-only graphics flag independently of FPS; all existing FPS tags remain untouched. */
+    public static void applyFlashQuality(Result callback) {
+        if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست؛ Shizuku را اجرا کن."); return; }
+        if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است؛ ابتدا مجوز را بگیر."); return; }
+        boolean backupCreated = false;
+        boolean writeAttempted = false;
+        try {
+            ensureGameClosed();
+            byte[] original = readSave();
+            if (!isGvas(original)) { callback.done(false, "Active.sav معتبر نیست؛ فایل تغییر نکرد."); return; }
+            byte[] patched = original.clone();
+            int changed = patchBool(patched, "bFlashOnlyQuality", true);
+            if (changed == 0) { callback.done(false, "تگ bFlashOnlyQuality در Active.sav پیدا نشد؛ فایل تغییر نکرد."); return; }
+            runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
+            backupCreated = true;
+            writeAttempted = true;
+            writeTemp(patched);
+            runChecked("test -s '" + TEMP + "' && cat '" + TEMP + "' > '" + SAVE + "' && sync");
+            byte[] readBack = readSave();
+            if (!Arrays.equals(patched, readBack)) throw new Exception("بررسی فایل پس از ثبت کیفیت Flash ناموفق بود.");
+            runChecked("rm -f '" + TEMP + "'");
+            callback.done(true, "پرچم کیفیت Flash در Active.sav پابجی گلوبال ثبت و بررسی شد؛ تنظیمات FPS دست‌نخورده ماند. بکاپ ساخته شد.");
+        } catch (Throwable e) {
+            String restore = "";
+            if (backupCreated && writeAttempted) {
+                try {
+                    runChecked("cat '" + BACKUP + "' > '" + SAVE + "' && sync");
+                    if (!Arrays.equals(readSave(), readBackup())) throw new Exception("بررسی بکاپ ناموفق");
+                    restore = " فایل اصلی از بکاپ بازیابی شد.";
+                } catch (Throwable restoreError) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ در " + BACKUP + " باقی مانده است."; }
+            }
+            try { runChecked("rm -f '" + TEMP + "'"); } catch (Throwable ignored) {}
+            callback.done(false, "اعمال کیفیت Flash ناموفق بود: " + safeMessage(e) + restore);
+        }
+    }
+
+    /** Unreal BoolProperty stores its value byte in the property tag after size and array index. */
+    private static int patchBool(byte[] data, String name, boolean value) {
+        byte[] key = (name + "\\0").getBytes(StandardCharsets.UTF_8);
+        ByteBuffer b = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
+        int count = 0;
+        for (int i = 0; i <= data.length - key.length - 22; i++) {
+            boolean match = true;
+            for (int j = 0; j < key.length; j++) if (data[i + j] != key[j]) { match = false; break; }
+            if (!match) continue;
+            int p = i + key.length;
+            if (p + 4 > data.length) continue;
+            int typeLen = b.getInt(p);
+            if (typeLen != 13 || p + 4 + typeLen + 9 > data.length) continue;
+            String type = new String(data, p + 4, typeLen - 1, StandardCharsets.UTF_8);
+            if (!"BoolProperty".equals(type)) continue;
+            p += 4 + typeLen;
+            int size = b.getInt(p); p += 4;
+            if (size != 0 || p + 5 > data.length) continue;
+            p += 4; // array index
+            data[p] = (byte)(value ? 1 : 0);
+            count++;
+            i = p;
+        }
+        return count;
+    }
+
     public static void apply(final int level, Result callback) {
         if (level < 1 || level > 7) {
             callback.done(false, "مقدار FPS نامعتبر است.");
