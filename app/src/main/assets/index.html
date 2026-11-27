@@ -367,7 +367,8 @@ function gfxShizukuBadge(){
  badge.innerText='Shizuku: '+(connected?'متصل':'قطع');
 }
 function gfxRefresh(){
- var st=gfxCall('shizukuStatus'),sh=$('gfxShz'),ok=st==='granted',game=gfxCall('pubgInstalled')===true;\n gfxDeviceStats();gfxShizukuBadge();
+ var st=gfxCall('shizukuStatus'),sh=$('gfxShz'),ok=st==='granted',game=gfxCall('pubgInstalled')===true;
+ gfxDeviceStats();gfxShizukuBadge();
  if(!ok)gfxFileReady=false;
  sh.className=ok?'ok':'bad';
  sh.innerText=st===undefined?'نسخه برنامه پشتیبانی نمی‌کند':(ok?'فعال و مجاز':(st==='unavailable'?'Shizuku اجرا نیست':'مجوز داده نشده'));
