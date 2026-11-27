@@ -18,9 +18,24 @@ import rikka.shizuku.Shizuku;
 public final class ShizukuFpsBridge {
     public interface Result { void done(boolean ok, String message); }
 
-    private static final String SAVE = "/storage/emulated/0/Android/data/com.tencent.ig/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames/Active.sav";
-    private static final String BACKUP = SAVE + ".irkhatary.bak";
+    private static String GAME_PACKAGE = "com.tencent.ig";
+    private static String SAVE_DIR = "/storage/emulated/0/Android/data/com.tencent.ig/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames";
+    private static String SAVE = SAVE_DIR + "/Active.sav";
+    private static String BACKUP = SAVE + ".irkhatary.bak";
     private static final String TEMP = "/data/local/tmp/irkhatary_Active.sav";
+
+    public static String packageForVersion(String version) {
+        if ("korea".equalsIgnoreCase(version)) return "com.pubg.krmobile";
+        if ("india".equalsIgnoreCase(version)) return "com.pubg.imobile";
+        if ("lite".equalsIgnoreCase(version)) return "com.tencent.iglite";
+        return "com.tencent.ig";
+    }
+    private static void selectGame(String version) {
+        GAME_PACKAGE = packageForVersion(version);
+        SAVE_DIR = "/storage/emulated/0/Android/data/" + GAME_PACKAGE + "/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames";
+        SAVE = SAVE_DIR + "/Active.sav";
+        BACKUP = SAVE + ".irkhatary.bak";
+    }
     private static final byte[] GVAS = new byte[]{'G','V','A','S'};
 
     private ShizukuFpsBridge() {}
@@ -32,7 +47,9 @@ public final class ShizukuFpsBridge {
         } catch (Throwable ignored) { return false; }
     }
 
-    public static void checkFile(Result callback) {
+    public static void checkFile(Result callback) { checkFile("global", callback); }
+    public static void checkFile(String version, Result callback) {
+        selectGame(version);
         if (!Shizuku.pingBinder()) {
             callback.done(false, "Shizuku فعال نیست؛ ابتدا Shizuku را Start کن.");
             return;
@@ -44,24 +61,26 @@ public final class ShizukuFpsBridge {
         try {
             ensureGameClosed();
             // Verify the real read/write path and temporary-file capability without altering the save.
-            runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && test -w '/storage/emulated/0/Android/data/com.tencent.ig/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames' && touch '" + TEMP + "' && rm -f '" + TEMP + "'");
+            runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && test -w '" + SAVE_DIR + "' && touch '" + TEMP + "' && rm -f '" + TEMP + "'");
             byte[] data = readSave();
             int fpsLevel = countIntProperty(data, "FPSLevel");
             int battle = countIntProperty(data, "BattleFPS");
             int lobby = countIntProperty(data, "LobbyFPS");
             int city = countIntProperty(data, "MainCityFPS");
             if (fpsLevel == 0 || battle == 0) {
-                callback.done(false, "فایل خوانده شد، اما تگ‌های اصلی FPSLevel و BattleFPS در فایل PUBG Global پیدا نشدند؛ هیچ تغییری انجام نشد.");
+                callback.done(false, "فایل خوانده شد، اما تگ‌های FPSLevel و BattleFPS در فایل نسخه انتخاب‌شده پیدا نشدند؛ هیچ تغییری انجام نشد.");
                 return;
             }
-            callback.done(true, "دسترسی خواندن و نوشتن تأیید شد. Active.sav خوانده شد و تگ‌های اصلی FPS پیدا شدند (FPSLevel: " + fpsLevel + "، BattleFPS: " + battle + "، LobbyFPS: " + lobby + "، MainCityFPS: " + city + ").");
+            callback.done(true, "دسترسی خواندن و نوشتن نسخه " + GAME_PACKAGE + " تأیید شد. Active.sav خوانده شد و تگ‌های اصلی FPS پیدا شدند (FPSLevel: " + fpsLevel + "، BattleFPS: " + battle + "، LobbyFPS: " + lobby + "، MainCityFPS: " + city + ").");
         } catch (Throwable e) {
             callback.done(false, "خواندن Active.sav ناموفق بود: " + safeMessage(e));
         }
     }
 
     /** Applies the Flash-only graphics flag independently of FPS; all existing FPS tags remain untouched. */
-    public static void applyFlashQuality(Result callback) {
+    public static void applyFlashQuality(Result callback) { applyFlashQuality("global", callback); }
+    public static void applyFlashQuality(String version, Result callback) {
+        selectGame(version);
         if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست؛ Shizuku را اجرا کن."); return; }
         if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است؛ ابتدا مجوز را بگیر."); return; }
         boolean backupCreated = false;
@@ -81,7 +100,7 @@ public final class ShizukuFpsBridge {
             byte[] readBack = readSave();
             if (!Arrays.equals(patched, readBack)) throw new Exception("بررسی فایل پس از ثبت کیفیت Flash ناموفق بود.");
             runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "پرچم کیفیت Flash در Active.sav پابجی گلوبال ثبت و بررسی شد؛ تنظیمات FPS دست‌نخورده ماند. بکاپ ساخته شد.");
+            callback.done(true, "تگ Flash در Active.sav نسخه " + GAME_PACKAGE + " ثبت و بررسی شد؛ تنظیمات FPS دست‌نخورده ماند. بکاپ ساخته شد.");
         } catch (Throwable e) {
             String restore = "";
             if (backupCreated && writeAttempted) {
@@ -122,7 +141,9 @@ public final class ShizukuFpsBridge {
         return count;
     }
 
-    public static void apply(final int level, Result callback) {
+    public static void apply(final int level, Result callback) { apply(level, "global", callback); }
+    public static void apply(final int level, String version, Result callback) {
+        selectGame(version);
         if (level < 1 || level > 7) {
             callback.done(false, "مقدار FPS نامعتبر است.");
             return;
@@ -169,7 +190,7 @@ public final class ShizukuFpsBridge {
             }
 
             runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "تنظیم FPS در Active.sav ثبت و با خواندن دوباره تأیید شد. نسخه پشتیبان ساخته شد. مقدار درخواستی: " + level + " (enum " + (level << 8) + "). PUBG ممکن است سقف FPS را بر اساس دستگاه محدود کند.");
+            callback.done(true, "تنظیم FPS در Active.sav نسخه " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شد. نسخه پشتیبان ساخته شد. مقدار درخواستی: " + level + " (enum " + (level << 8) + "). PUBG ممکن است سقف FPS را بر اساس دستگاه محدود کند.");
         } catch (Throwable e) {
             String restore = "";
             if (backupCreated && writeAttempted) {
@@ -188,8 +209,8 @@ public final class ShizukuFpsBridge {
     }
 
     private static void ensureGameClosed() throws Exception {
-        String pids = new String(runBytes("pidof com.tencent.ig 2>/dev/null || true"), StandardCharsets.UTF_8).trim();
-        if (!pids.isEmpty()) throw new Exception("PUBG هنوز در حال اجراست؛ بازی را کامل ببند و دوباره بررسی کن.");
+        String pids = new String(runBytes("pidof " + GAME_PACKAGE + " 2>/dev/null || true"), StandardCharsets.UTF_8).trim();
+        if (!pids.isEmpty()) throw new Exception("بازی " + GAME_PACKAGE + " هنوز در حال اجراست؛ آن را کامل ببند و دوباره بررسی کن.");
     }
 
     private static byte[] readSave() throws Exception {
