@@ -270,8 +270,8 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 <div class="gfx-options">
 <div class="gfx-option"><label data-fa="نسخه پابجی" data-en="PUBG version" data-ar="إصدار ببجي">نسخه پابجی</label><select id="gfxGameVersion" class="gfx-native-select" onchange="gfxVersionChanged()"><option value="global">global</option><option value="flash">flash</option><option value="korea">korea</option><option value="india">india</option></select><div class="gfx-choice" data-target="gfxGameVersion"><button type="button" data-value="global" data-fa="GLOBAL" data-en="GLOBAL" data-ar="عالمي">GLOBAL</button><button type="button" data-value="flash" data-fa="FLASH" data-en="FLASH" data-ar="فلاش">FLASH</button><button type="button" data-value="korea" data-fa="KOREA" data-en="KOREA" data-ar="كوري">KOREA</button><button type="button" data-value="india" data-fa="INDIA" data-en="INDIA" data-ar="الهند">INDIA</button></div></div>
 <div class="gfx-option"><label data-fa="کیفیت گرافیک" data-en="Graphics quality" data-ar="جودة الرسومات">کیفیت گرافیک</label><select id="gfxQuality" class="gfx-native-select" onchange="gfxQualityChanged()"><option value="flash">flash</option><option value="smooth">smooth</option><option value="balanced">balanced</option><option value="hd">hd</option><option value="hdr">hdr</option><option value="ultra">ultra</option><option value="uhd">uhd</option></select><div class="gfx-choice" data-target="gfxQuality"><button type="button" data-value="flash" data-fa="FLASH" data-en="FLASH" data-ar="فلاش">FLASH</button><button type="button" data-value="smooth" data-fa="SMOOTH" data-en="SMOOTH" data-ar="سلس">SMOOTH</button><button type="button" data-value="balanced" data-fa="BALANCED" data-en="BALANCED" data-ar="متوازن">BALANCED</button><button type="button" data-value="hd" data-fa="HD" data-en="HD" data-ar="HD">HD</button><button type="button" data-value="hdr" data-fa="HDR" data-en="HDR" data-ar="HDR">HDR</button><button type="button" data-value="ultra" data-fa="ULTRA" data-en="ULTRA" data-ar="فائق">ULTRA</button><button type="button" data-value="uhd" data-fa="UHD" data-en="UHD" data-ar="UHD">UHD</button></div></div>
-<div class="gfx-option"><label data-fa="کیفیت صدا" data-en="Audio quality" data-ar="جودة الصوت">کیفیت صدا</label><select id="gfxAudio" class="gfx-native-select" onchange="gfxAudioChanged()"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select><div class="gfx-choice" data-target="gfxAudio"><button type="button" data-value="low" data-fa="LOW" data-en="LOW" data-ar="منخفض">LOW</button><button type="button" data-value="medium" data-fa="MEDIUM" data-en="MEDIUM" data-ar="متوسط">MEDIUM</button><button type="button" data-value="high" data-fa="HIGH" data-en="HIGH" data-ar="مرتفع">HIGH</button></div></div></div>
-<div class="gfx-fps-title" data-fa="انتخاب FPS" data-en="FPS selection" data-ar="اختيار FPS">انتخاب FPS</div><div class="gfx-fps-choice"><button class="gfx-fps-btn" id="gfxFps60" onclick="gfxSelectFps(5)">60 FPS</button><button class="gfx-fps-btn" id="gfxFps90" onclick="gfxSelectFps(6)">90 FPS</button><button class="gfx-fps-btn selected" id="gfxFps120" onclick="gfxSelectFps(7)">120 FPS</button></div><div class="gfx-fps-slider-wrap"><input id="gfxFpsSlider" class="gfx-fps-slider" type="range" min="5" max="7" step="1" value="7" aria-label="FPS slider" oninput="gfxSelectFps(Number(this.value))"><div class="gfx-slider-labels"><span>60 FPS</span><span>90 FPS</span><span>120 FPS</span></div></div>
+</div>
+<div class="gfx-fps-title" data-fa="انتخاب FPS" data-en="FPS selection" data-ar="اختيار FPS">انتخاب FPS</div><div class="gfx-fps-choice"><button class="gfx-fps-btn selected" id="gfxFps120" onclick="gfxSelectFps(7)">120 FPS</button></div>
 <div class="gfx-card"><div class="gfx-row"><span>Shizuku</span><b id="gfxShz" class="bad">—</b></div><div class="gfx-row"><span>PUBG MOBILE</span><b id="gfxGame" class="bad">—</b></div><button class="gfx-perm" id="gfxPerm" onclick="gfxPermission()">فعال‌سازی / مجوز Shizuku</button><div class="gfx-row"><span>تنظیمات بازی</span><b id="gfxFile" class="bad">بررسی نشده</b></div><button class="gfx-perm" id="gfxFileBtn" onclick="gfxCheckFile()">آماده‌سازی تنظیمات بازی</button></div>
 <div class="gfx-hint" id="gfxHint">Shizuku را Start کن، مجوز بده و تنظیمات بازی را آماده کن.</div>
 <div class="gfx-track locked" id="gfxTrack"><div class="gfx-fill" id="gfxFill"></div><div class="gfx-label" id="gfxLabel">بکش به سمت راست »</div><div class="gfx-knob" id="gfxKnob">⚡</div></div>
@@ -343,12 +343,9 @@ var gfxBusy=false,gfxFileReady=false,gfxFileMessage='';
 function gfxCall(n,a){try{if(window.AndroidApp&&typeof AndroidApp[n]==='function')return AndroidApp[n].apply(AndroidApp,a||[])}catch(e){}return undefined}
 var selectedGfxFps=7;
 function gfxSelectFps(level){
- selectedGfxFps=(level===5||level===6)?level:7;
- $('gfxFps60').classList.toggle('selected',selectedGfxFps===5);
- $('gfxFps90').classList.toggle('selected',selectedGfxFps===6);
- $('gfxFps120').classList.toggle('selected',selectedGfxFps===7);
- var slider=$('gfxFpsSlider');if(slider)slider.value=String(selectedGfxFps);
- try{localStorage.setItem('irkhatary_gfx_fps',String(selectedGfxFps))}catch(e){}
+ selectedGfxFps=7;
+ $('gfxFps120').classList.add('selected');
+ try{localStorage.setItem('irkhatary_gfx_fps','7')}catch(e){}
 }
 function gfxSyncChoiceGroups(){
  document.querySelectorAll('.gfx-choice').forEach(function(group){
@@ -363,7 +360,7 @@ document.querySelectorAll('.gfx-choice').forEach(function(group){
   var btn=e.target.closest('button[data-value]');if(!btn)return;
   var sel=$(group.getAttribute('data-target'));if(!sel)return;
   sel.value=btn.getAttribute('data-value');
-  if(sel.id==='gfxQuality')gfxQualityChanged();else if(sel.id==='gfxGameVersion')gfxVersionChanged();else if(sel.id==='gfxAudio')gfxAudioChanged();else gfxSaveOptions();
+  if(sel.id==='gfxQuality')gfxQualityChanged();else if(sel.id==='gfxGameVersion')gfxVersionChanged();else gfxSaveOptions();
   gfxSyncChoiceGroups();
  });
 });
@@ -394,14 +391,8 @@ window.onRenderQualityResult=function(ok,msg){
  if(ok){try{localStorage.setItem('irkhatary_gfx_quality',$('gfxQuality').value)}catch(e){}gfxFileReady=false;setTimeout(function(){closeGfx();gfxCall('launchPubg',[$('gfxGameVersion').value])},900)}
 };
 function gfxVersionChanged(){gfxSaveOptions();gfxFileReady=false;gfxRefresh();if(gfxCall('shizukuStatus')==='granted')gfxCheckFile()}
-function gfxAudioChanged(){
- // Audio tier is not represented by a verified field in the supplied Active.sav format.
- // Do not keep a false local selection: return to the neutral UI value and report honestly.
- $('gfxAudio').value='medium';gfxSyncChoiceGroups();
- $('gfxRes').style.color='#ffcc66';
- $('gfxRes').innerText='کیفیت صدای LOW/MEDIUM/HIGH در فایل این نسخه قابل تأیید نیست؛ انتخاب ذخیره یا اعمال نشد.';
-}
-function gfxLoadOptions(){try{var v=localStorage.getItem('irkhatary_gfx_version'),q=localStorage.getItem('irkhatary_gfx_quality');if(v&&$('gfxGameVersion').querySelector('option[value="'+v+'"]'))$('gfxGameVersion').value=v;if(q&&$('gfxQuality').querySelector('option[value="'+q+'"]'))$('gfxQuality').value=q;$('gfxAudio').value='medium'}catch(e){}gfxSyncChoiceGroups()}
+
+function gfxLoadOptions(){try{var v=localStorage.getItem('irkhatary_gfx_version'),q=localStorage.getItem('irkhatary_gfx_quality');if(v&&$('gfxGameVersion').querySelector('option[value="'+v+'"]'))$('gfxGameVersion').value=v;if(q&&$('gfxQuality').querySelector('option[value="'+q+'"]'))$('gfxQuality').value=q}catch(e){}gfxSyncChoiceGroups()}
 function gfxDeviceStats(){
  var raw=gfxCall('getDeviceInfo');if(!raw)return;
  try{
