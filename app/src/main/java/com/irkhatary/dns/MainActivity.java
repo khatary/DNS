@@ -176,7 +176,7 @@ public class MainActivity extends Activity {
             else if ("ultra".equalsIgnoreCase(quality)) file = "ActiveULTRA.sav";
             else if ("uhd".equalsIgnoreCase(quality)) file = "ActiveUHD.sav";
             else throw new IllegalArgumentException("کیفیت انتخاب‌شده معتبر نیست");
-            java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(getAssets().open("profiles.zip"));
+            java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(getAssets().open("PUBG_ActiveSAV_profiles(1).zip"));
             try {
                 java.util.zip.ZipEntry entry;
                 while ((entry = zip.getNextEntry()) != null) {
