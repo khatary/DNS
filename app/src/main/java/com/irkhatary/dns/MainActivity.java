@@ -102,6 +102,27 @@ public class MainActivity extends Activity {
     }
 
     public class Bridge {
+        @android.webkit.JavascriptInterface public String shizukuServiceStatus() {
+            try { return rikka.shizuku.Shizuku.pingBinder() ? "connected" : "disconnected"; }
+            catch (Throwable e) { return "disconnected"; }
+        }
+        @android.webkit.JavascriptInterface public String getDeviceInfo() {
+            try {
+                org.json.JSONObject info = new org.json.JSONObject();
+                info.put("model", Build.MODEL == null ? "Android device" : Build.MODEL);
+                info.put("manufacturer", Build.MANUFACTURER == null ? "" : Build.MANUFACTURER);
+                android.app.ActivityManager am = (android.app.ActivityManager)getSystemService(ACTIVITY_SERVICE);
+                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+                if (am != null) am.getMemoryInfo(mi);
+                info.put("ramTotal", mi.totalMem);
+                info.put("ramAvailable", mi.availMem);
+                android.os.StatFs fs = new android.os.StatFs(android.os.Environment.getDataDirectory().getPath());
+                long block = fs.getBlockSizeLong();
+                info.put("storageTotal", fs.getBlockCountLong() * block);
+                info.put("storageAvailable", fs.getAvailableBlocksLong() * block);
+                return info.toString();
+            } catch (Throwable e) { return ""; }
+        }
         @android.webkit.JavascriptInterface public String shizukuStatus() {
             try {
                 if (!rikka.shizuku.Shizuku.pingBinder()) return "unavailable";
