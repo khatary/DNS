@@ -460,7 +460,7 @@ window.onShizukuPermissionResult=function(ok,reason){
 function gfxReset(){var k=$('gfxKnob');k.style.transition='left .25s';k.style.left='5px';$('gfxFill').style.width='0';$('gfxTrack').classList.remove('done');$('gfxLabel').innerText='بکش به سمت راست »'}
 window.onFpsResult=function(ok,msg){
  gfxBusy=false;$('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'انجام شد':'ناموفق بود');
- if(ok){gfxFileReady=false;$('gfxLabel').innerText='ثبت و تأیید شد ✔';setTimeout(function(){closeGfx();gfxCall('launchPubg')},900)}else gfxReset()
+ if(ok){gfxFileReady=false;$('gfxLabel').innerText='ثبت و تأیید شد ✔';setTimeout(function(){closeGfx();gfxCall('launchPubg',[$('gfxGameVersion').value])},900)}else gfxReset()
 };
 (function(){
  var tr=$('gfxTrack'),kn=$('gfxKnob'),fill=$('gfxFill'),x0=0,on=false,max=0;
