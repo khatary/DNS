@@ -166,6 +166,23 @@ public class MainActivity extends Activity {
             }});
             return "pending";
         }
+        @android.webkit.JavascriptInterface public String applyPubgRenderQuality(final String version, final String quality) {
+            if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
+            if (!shizukuStatus().equals("granted")) return "Shizuku فعال نیست";
+            gfxExecutor.execute(new Runnable() { @Override public void run() {
+                ShizukuFpsBridge.applyRenderQuality(version, quality, new ShizukuFpsBridge.Result() {
+                    @Override public void done(final boolean ok, final String message) {
+                        runOnUiThread(new Runnable() { @Override public void run() {
+                            if (web != null) web.evaluateJavascript("window.onRenderQualityResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
+                        }});
+                    }
+                });
+            }});
+            return "pending";
+        }
+        @android.webkit.JavascriptInterface public String applyPubgAudioQuality(String version, String quality) {
+            return "این نسخه از Active.sav مقدار قابل‌تأییدی برای کیفیت صدای LOW/MEDIUM/HIGH ندارد؛ برای جلوگیری از خرابی فایل هیچ تغییری انجام نشد.";
+        }
         @android.webkit.JavascriptInterface public String applyPubgFlashQuality() { return applyPubgFlashQuality("global"); }
         @android.webkit.JavascriptInterface public String applyPubgFlashQuality(final String version) {
             if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
