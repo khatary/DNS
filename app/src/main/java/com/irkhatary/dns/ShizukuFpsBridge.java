@@ -77,75 +77,85 @@ public final class ShizukuFpsBridge {
         }
     }
 
-    /** Writes the game's RenderQuality enum fields only after both expected GVAS tags are found. */
+    /** Applies the graphics profile values observed in the user's supplied Active.sav files. */
     public static void applyRenderQuality(String version, String quality, Result callback) {
         selectGame(version);
         if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست."); return; }
         if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است."); return; }
+
         int enumValue;
-        // PUBG graphics tiers are 1-based: Flash=1, Smooth=2, Balanced=3,
-        // HD=4, HDR=5, Ultra=6, UHD=7. The provided files confirm the mapping.
-        if ("smooth".equalsIgnoreCase(quality)) enumValue = 1;
-        else if ("balanced".equalsIgnoreCase(quality)) enumValue = 2;
-        else if ("hd".equalsIgnoreCase(quality)) enumValue = 3;
-        else if ("hdr".equalsIgnoreCase(quality)) enumValue = 4;
-        else if ("ultra".equalsIgnoreCase(quality)) enumValue = 5;
-        else if ("uhd".equalsIgnoreCase(quality)) enumValue = 6;
-        else { callback.done(false, "کیفیت Flash باید از مسیر جداگانه اعمال شود."); return; }
+        if ("flash".equalsIgnoreCase(quality)) enumValue = 1;
+        else if ("smooth".equalsIgnoreCase(quality)) enumValue = 2;
+        else if ("balanced".equalsIgnoreCase(quality)) enumValue = 3;
+        else if ("hd".equalsIgnoreCase(quality)) enumValue = 4;
+        else if ("hdr".equalsIgnoreCase(quality)) enumValue = 5;
+        else if ("ultra".equalsIgnoreCase(quality)) enumValue = 6;
+        else if ("uhd".equalsIgnoreCase(quality)) enumValue = 7;
+        else { callback.done(false, "کیفیت گرافیک نامعتبر است."); return; }
+
         boolean backupCreated = false, writeAttempted = false;
         try {
             ensureGameClosed();
             byte[] original = readSave();
             byte[] patched = original.clone();
-            // The supplied Active.sav files store these enums in the high byte:
-            // Smooth=0x200, Balanced=0x300, HD=0x400, HDR=0x500,
-            // Ultra=0x600, UHD=0x700. patchInt() applies this encoding.
+
             int battleStyle = patchInt(patched, "BattleRenderStyle", enumValue);
-            int battle = patchInt(patched, "BattleRenderQuality", enumValue);
+            int battleQuality = patchInt(patched, "BattleRenderQuality", enumValue);
             int lobbyStyle = patchInt(patched, "LobbyRenderStyle", enumValue);
-            int lobby = patchInt(patched, "LobbyRenderQuality", enumValue);
-            int manor = patchInt(patched, "ManorRenderQuality", enumValue);
-            int mainCityValue = ("smooth".equalsIgnoreCase(quality) || "flash".equalsIgnoreCase(quality)) ? 1 : enumValue;
-            int mainCity = patchInt(patched, "MainCityRenderQuality", mainCityValue);
+            int lobbyQuality = patchInt(patched, "LobbyRenderQuality", enumValue);
+            int manorQuality = patchInt(patched, "ManorRenderQuality", enumValue);
+            int mainCityValue = ("flash".equalsIgnoreCase(quality) || "smooth".equalsIgnoreCase(quality)) ? 1 : enumValue;
+            int mainCityQuality = patchInt(patched, "MainCityRenderQuality", mainCityValue);
             int enhancedLobbyValue = "balanced".equalsIgnoreCase(quality) ? 3 : 1;
             int enhancedLobby = patchInt(patched, "nEnhancedLobbyQuality", enhancedLobbyValue);
-            if (battle == 0 || lobby == 0) {
-                callback.done(false, "تگ‌های اصلی BattleRenderQuality و LobbyRenderQuality در فایل این نسخه پیدا نشدند؛ هیچ تغییری انجام نشد.");
+
+            int fpsLevel = patchInt(patched, "FPSLevel", 7);
+            int battleFps = patchInt(patched, "BattleFPS", 7);
+            int lobbyFps = patchInt(patched, "LobbyFPS", 7);
+            int cityFps = patchInt(patched, "MainCityFPS", 7);
+
+            if (battleStyle == 0 || battleQuality == 0 || lobbyStyle == 0 || lobbyQuality == 0
+                    || manorQuality == 0 || mainCityQuality == 0 || enhancedLobby == 0
+                    || fpsLevel == 0 || battleFps == 0 || lobbyFps == 0 || cityFps == 0) {
+                callback.done(false, "تگ‌های کیفیت گرافیک یا FPS در Active.sav پیدا نشدند؛ فایل تغییر نکرد.");
                 return;
             }
+
             runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
-            backupCreated = true; writeAttempted = true;
+            backupCreated = true;
+            writeAttempted = true;
             writeTemp(patched);
             runChecked("test -s '" + TEMP + "' && cat '" + TEMP + "' > '" + SAVE + "' && sync");
-            if (!Arrays.equals(patched, readSave())) throw new Exception("تأیید دوبارهٔ فایل کیفیت ناموفق بود.");
+            if (!Arrays.equals(patched, readSave())) throw new Exception("تأیید دوبارهٔ فایل پس از ثبت کیفیت و 120 FPS ناموفق بود.");
             runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "کیفیت گرافیک در فایل " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شد (RenderQuality enum=" + enumValue + "). بکاپ ساخته شد.");
+            callback.done(true, "کیفیت " + quality.toUpperCase() + " و تگ‌های FPS (120 FPS) در Active.sav نسخه " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شدند. بکاپ ساخته شد.");
         } catch (Throwable e) {
             String restore = "";
             if (backupCreated && writeAttempted) {
-                try { runChecked("cat '" + BACKUP + "' > '" + SAVE + "' && sync"); if (!Arrays.equals(readSave(), readBackup())) throw new Exception("backup verify failed"); restore = " فایل اصلی از بکاپ بازیابی شد."; }
-                catch (Throwable x) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ حفظ شده است."; }
+                try {
+                    runChecked("cat '" + BACKUP + "' > '" + SAVE + "' && sync");
+                    if (!Arrays.equals(readSave(), readBackup())) throw new Exception("backup verify failed");
+                    restore = " فایل اصلی از بکاپ بازیابی شد.";
+                } catch (Throwable x) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ حفظ شده است."; }
             }
             try { runChecked("rm -f '" + TEMP + "'"); } catch (Throwable ignored) {}
             callback.done(false, "اعمال کیفیت گرافیک ناموفق بود: " + safeMessage(e) + restore);
         }
     }
 
-    /** Applies the Flash-only graphics flag independently of FPS; all existing FPS tags remain untouched. */
+    /** Applies Flash's observed profile values and enables its Flash-only flag. */
     public static void applyFlashQuality(Result callback) { applyFlashQuality("global", callback); }
     public static void applyFlashQuality(String version, Result callback) {
         selectGame(version);
         if (!Shizuku.pingBinder()) { callback.done(false, "Shizuku سرویس فعال نیست؛ Shizuku را اجرا کن."); return; }
         if (!hasShizukuPermission()) { callback.done(false, "مجوز Shizuku داده نشده است؛ ابتدا مجوز را بگیر."); return; }
-        boolean backupCreated = false;
-        boolean writeAttempted = false;
+        boolean backupCreated = false, writeAttempted = false;
         try {
             ensureGameClosed();
             byte[] original = readSave();
             if (!isGvas(original)) { callback.done(false, "Active.sav معتبر نیست؛ فایل تغییر نکرد."); return; }
             byte[] patched = original.clone();
-            // Flash is the first graphics tier in the supplied profile files.
-            // Apply its actual serialized quality values as well as the Flash flag.
+
             int battleStyle = patchInt(patched, "BattleRenderStyle", 1);
             int battleQuality = patchInt(patched, "BattleRenderQuality", 1);
             int lobbyStyle = patchInt(patched, "LobbyRenderStyle", 1);
@@ -153,9 +163,16 @@ public final class ShizukuFpsBridge {
             int manorQuality = patchInt(patched, "ManorRenderQuality", 1);
             int mainCityQuality = patchInt(patched, "MainCityRenderQuality", 1);
             int enhancedLobby = patchInt(patched, "nEnhancedLobbyQuality", 1);
-            int changed = patchBool(patched, "bFlashOnlyQuality", true);
-            if (battleQuality == 0 || lobbyQuality == 0 || changed == 0) {
-                callback.done(false, "تگ‌های کیفیت Flash در Active.sav پیدا نشدند؛ فایل تغییر نکرد.");
+            int fpsLevel = patchInt(patched, "FPSLevel", 7);
+            int battleFps = patchInt(patched, "BattleFPS", 7);
+            int lobbyFps = patchInt(patched, "LobbyFPS", 7);
+            int cityFps = patchInt(patched, "MainCityFPS", 7);
+            int flashFlag = patchBool(patched, "bFlashOnlyQuality", true);
+
+            if (battleStyle == 0 || battleQuality == 0 || lobbyStyle == 0 || lobbyQuality == 0
+                    || manorQuality == 0 || mainCityQuality == 0 || enhancedLobby == 0
+                    || fpsLevel == 0 || battleFps == 0 || lobbyFps == 0 || cityFps == 0 || flashFlag == 0) {
+                callback.done(false, "تگ‌های کیفیت Flash یا FPS در Active.sav پیدا نشدند؛ فایل تغییر نکرد.");
                 return;
             }
             runChecked("test -r '" + SAVE + "' && test -w '" + SAVE + "' && cp -p '" + SAVE + "' '" + BACKUP + "'");
@@ -163,10 +180,9 @@ public final class ShizukuFpsBridge {
             writeAttempted = true;
             writeTemp(patched);
             runChecked("test -s '" + TEMP + "' && cat '" + TEMP + "' > '" + SAVE + "' && sync");
-            byte[] readBack = readSave();
-            if (!Arrays.equals(patched, readBack)) throw new Exception("بررسی فایل پس از ثبت کیفیت Flash ناموفق بود.");
+            if (!Arrays.equals(patched, readSave())) throw new Exception("بررسی فایل پس از ثبت Flash و 120 FPS ناموفق بود.");
             runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "تگ Flash در Active.sav نسخه " + GAME_PACKAGE + " ثبت و بررسی شد؛ تنظیمات FPS دست‌نخورده ماند. بکاپ ساخته شد.");
+            callback.done(true, "کیفیت Flash و 120 FPS در Active.sav نسخه " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شدند؛ بکاپ ساخته شد.");
         } catch (Throwable e) {
             String restore = "";
             if (backupCreated && writeAttempted) {
@@ -174,7 +190,7 @@ public final class ShizukuFpsBridge {
                     runChecked("cat '" + BACKUP + "' > '" + SAVE + "' && sync");
                     if (!Arrays.equals(readSave(), readBackup())) throw new Exception("بررسی بکاپ ناموفق");
                     restore = " فایل اصلی از بکاپ بازیابی شد.";
-                } catch (Throwable restoreError) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ در " + BACKUP + " باقی مانده است."; }
+                } catch (Throwable x) { restore = " هشدار: بازیابی بکاپ ناموفق بود؛ بکاپ در " + BACKUP + " باقی مانده است."; }
             }
             try { runChecked("rm -f '" + TEMP + "'"); } catch (Throwable ignored) {}
             callback.done(false, "اعمال کیفیت Flash ناموفق بود: " + safeMessage(e) + restore);
@@ -234,12 +250,14 @@ public final class ShizukuFpsBridge {
             }
 
             byte[] patched = original.clone();
-            // The supplied GVAS sample stores BattleFPS as a plain enum (e.g. 5),
-            // not as level << 8. Preserve FPSLevel/LobbyFPS/MainCityFPS: they are
-            // separate settings and must not be overwritten with the battle FPS enum.
-            int battle = patchInt(patched, "BattleFPS", level);
-            if (battle == 0) {
-                callback.done(false, "تگ BattleFPS با نوع IntProperty پیدا نشد؛ فایل تغییر نکرد.");
+            // The provided profile saves serialize enum ordinals in byte 1 (7 = 120 FPS).
+            // Keep all FPS-related profile tags aligned with 120 FPS, as in the supplied files.
+            int fpsLevel = patchInt(patched, "FPSLevel", 7);
+            int battle = patchInt(patched, "BattleFPS", 7);
+            int lobby = patchInt(patched, "LobbyFPS", 7);
+            int mainCity = patchInt(patched, "MainCityFPS", 7);
+            if (fpsLevel == 0 || battle == 0 || lobby == 0 || mainCity == 0) {
+                callback.done(false, "یکی از تگ‌های FPSLevel / BattleFPS / LobbyFPS / MainCityFPS پیدا نشد؛ فایل تغییر نکرد.");
                 return;
             }
 
@@ -256,7 +274,7 @@ public final class ShizukuFpsBridge {
             }
 
             runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "BattleFPS در Active.sav نسخه " + GAME_PACKAGE + " روی مقدار " + level + " ثبت و با خواندن دوباره تأیید شد. FPSLevel و LobbyFPS دست‌نخورده ماندند؛ بکاپ ساخته شد. PUBG ممکن است سقف FPS را بر اساس دستگاه محدود کند.");
+            callback.done(true, "تگ‌های FPSLevel، BattleFPS، LobbyFPS و MainCityFPS در Active.sav نسخه " + GAME_PACKAGE + " روی مقدار 120 FPS (enum=7) ثبت و با خواندن دوباره تأیید شدند؛ بکاپ ساخته شد. PUBG ممکن است سقف FPS را بر اساس دستگاه محدود کند.");
         } catch (Throwable e) {
             String restore = "";
             if (backupCreated && writeAttempted) {
