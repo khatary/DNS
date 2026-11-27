@@ -27,7 +27,7 @@ public final class ShizukuFpsBridge {
     public static String packageForVersion(String version) {
         if ("korea".equalsIgnoreCase(version)) return "com.pubg.krmobile";
         if ("india".equalsIgnoreCase(version)) return "com.pubg.imobile";
-        if ("flash".equalsIgnoreCase(version) || "lite".equalsIgnoreCase(version)) return "com.tencent.iglite";
+        if ("flash".equalsIgnoreCase(version) || "lite".equalsIgnoreCase(version)) return "com.tencent.igfit";
         return "com.tencent.ig";
     }
     private static void selectGame(String version) {
