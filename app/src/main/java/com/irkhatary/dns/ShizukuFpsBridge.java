@@ -98,7 +98,7 @@ public final class ShizukuFpsBridge {
 
     /** Unreal BoolProperty stores its value byte in the property tag after size and array index. */
     private static int patchBool(byte[] data, String name, boolean value) {
-        byte[] key = (name + "\\0").getBytes(StandardCharsets.UTF_8);
+        byte[] key = (name + "\0").getBytes(StandardCharsets.UTF_8);
         ByteBuffer b = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
         int count = 0;
         for (int i = 0; i <= data.length - key.length - 22; i++) {
