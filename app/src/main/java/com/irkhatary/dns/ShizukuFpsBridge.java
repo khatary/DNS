@@ -210,12 +210,12 @@ public final class ShizukuFpsBridge {
             }
 
             byte[] patched = original.clone();
-            int fpsLevel = patchInt(patched, "FPSLevel", level << 8);
-            int battle = patchInt(patched, "BattleFPS", level << 8);
-            int lobby = patchInt(patched, "LobbyFPS", level << 8);
-            int city = patchInt(patched, "MainCityFPS", level << 8);
-            if (fpsLevel == 0 || battle == 0) {
-                callback.done(false, "تگ‌های اصلی FPSLevel و BattleFPS پیدا نشدند؛ فایل تغییر نکرد.");
+            // The supplied GVAS sample stores BattleFPS as a plain enum (e.g. 5),
+            // not as level << 8. Preserve FPSLevel/LobbyFPS/MainCityFPS: they are
+            // separate settings and must not be overwritten with the battle FPS enum.
+            int battle = patchInt(patched, "BattleFPS", level);
+            if (battle == 0) {
+                callback.done(false, "تگ BattleFPS با نوع IntProperty پیدا نشد؛ فایل تغییر نکرد.");
                 return;
             }
 
@@ -232,7 +232,7 @@ public final class ShizukuFpsBridge {
             }
 
             runChecked("rm -f '" + TEMP + "'");
-            callback.done(true, "تنظیم FPS در Active.sav نسخه " + GAME_PACKAGE + " ثبت و با خواندن دوباره تأیید شد. نسخه پشتیبان ساخته شد. مقدار درخواستی: " + level + " (enum " + (level << 8) + "). PUBG ممکن است سقف FPS را بر اساس دستگاه محدود کند.");
+            callback.done(true, "BattleFPS در Active.sav نسخه " + GAME_PACKAGE + " روی مقدار " + level + " ثبت و با خواندن دوباره تأیید شد. FPSLevel و LobbyFPS دست‌نخورده ماندند؛ بکاپ ساخته شد. PUBG ممکن است سقف FPS را بر اساس دستگاه محدود کند.");
         } catch (Throwable e) {
             String restore = "";
             if (backupCreated && writeAttempted) {
