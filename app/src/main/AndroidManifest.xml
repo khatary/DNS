@@ -2,6 +2,9 @@
     <queries>
         <package android:name="ch.protonvpn.android" />
         <package android:name="com.tencent.ig" />
+        <package android:name="com.pubg.krmobile" />
+        <package android:name="com.pubg.imobile" />
+        <package android:name="com.tencent.iglite" />
         <package android:name="moe.shizuku.privileged.api" />
     </queries>
     <uses-permission android:name="android.permission.INTERNET" />
