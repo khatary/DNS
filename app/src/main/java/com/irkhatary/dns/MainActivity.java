@@ -150,12 +150,13 @@ public class MainActivity extends Activity {
                 }
             }});
         }
-        @android.webkit.JavascriptInterface public String applyPubgFps(final int level) {
+        @android.webkit.JavascriptInterface public String applyPubgFps(final int level) { return applyPubgFps(level, "global"); }
+        @android.webkit.JavascriptInterface public String applyPubgFps(final int level, final String version) {
             if (level < 1 || level > 7) return "مقدار FPS نامعتبر است";
             if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
             if (!shizukuStatus().equals("granted")) return "Shizuku فعال نیست";
             gfxExecutor.execute(new Runnable() { @Override public void run() {
-                ShizukuFpsBridge.apply(level, new ShizukuFpsBridge.Result() {
+                ShizukuFpsBridge.apply(level, version, new ShizukuFpsBridge.Result() {
                     @Override public void done(final boolean ok, final String message) {
                         runOnUiThread(new Runnable() { @Override public void run() {
                             if (web != null) web.evaluateJavascript("window.onFpsResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
@@ -165,11 +166,12 @@ public class MainActivity extends Activity {
             }});
             return "pending";
         }
-        @android.webkit.JavascriptInterface public String applyPubgFlashQuality() {
+        @android.webkit.JavascriptInterface public String applyPubgFlashQuality() { return applyPubgFlashQuality("global"); }
+        @android.webkit.JavascriptInterface public String applyPubgFlashQuality(final String version) {
             if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
             if (!shizukuStatus().equals("granted")) return "Shizuku فعال نیست";
             gfxExecutor.execute(new Runnable() { @Override public void run() {
-                ShizukuFpsBridge.applyFlashQuality(new ShizukuFpsBridge.Result() {
+                ShizukuFpsBridge.applyFlashQuality(version, new ShizukuFpsBridge.Result() {
                     @Override public void done(final boolean ok, final String message) {
                         runOnUiThread(new Runnable() { @Override public void run() {
                             if (web != null) web.evaluateJavascript("window.onFlashQualityResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
@@ -179,16 +181,16 @@ public class MainActivity extends Activity {
             }});
             return "pending";
         }
-        @android.webkit.JavascriptInterface public boolean pubgInstalled() {
-            try {
-                getPackageManager().getPackageInfo("com.tencent.ig", 0);
-                return true;
-            } catch (PackageManager.NameNotFoundException e) { return false; }
+        @android.webkit.JavascriptInterface public boolean pubgInstalled() { return pubgInstalled("global"); }
+        @android.webkit.JavascriptInterface public boolean pubgInstalled(final String version) {
+            try { getPackageManager().getPackageInfo(ShizukuFpsBridge.packageForVersion(version), 0); return true; }
+            catch (PackageManager.NameNotFoundException e) { return false; }
         }
-        @android.webkit.JavascriptInterface public String checkPubgSave() {
+        @android.webkit.JavascriptInterface public String checkPubgSave() { return checkPubgSave("global"); }
+        @android.webkit.JavascriptInterface public String checkPubgSave(final String version) {
             if (!shizukuStatus().equals("granted")) return "ابتدا Shizuku را اجرا و مجوز آن را بده.";
             gfxExecutor.execute(new Runnable() { @Override public void run() {
-                ShizukuFpsBridge.checkFile(new ShizukuFpsBridge.Result() {
+                ShizukuFpsBridge.checkFile(version, new ShizukuFpsBridge.Result() {
                     @Override public void done(final boolean ok, final String message) {
                         runOnUiThread(new Runnable() { @Override public void run() {
                             if (web != null) web.evaluateJavascript("window.onFpsFileCheck(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
@@ -269,9 +271,10 @@ public class MainActivity extends Activity {
                 return android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP);
             } catch (Exception e) { return ""; }
         }
-        @android.webkit.JavascriptInterface public void launchPubg() {
+        @android.webkit.JavascriptInterface public void launchPubg() { launchPubg("global"); }
+        @android.webkit.JavascriptInterface public void launchPubg(final String version) {
             runOnUiThread(new Runnable() { @Override public void run() {
-                final String packageName = "com.tencent.ig";
+                final String packageName = ShizukuFpsBridge.packageForVersion(version);
                 try {
                     Intent launch = getPackageManager().getLaunchIntentForPackage(packageName);
                     if (launch != null) startActivity(launch);
