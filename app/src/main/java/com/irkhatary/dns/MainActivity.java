@@ -165,6 +165,20 @@ public class MainActivity extends Activity {
             }});
             return "pending";
         }
+        @android.webkit.JavascriptInterface public String applyPubgFlashQuality() {
+            if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
+            if (!shizukuStatus().equals("granted")) return "Shizuku فعال نیست";
+            gfxExecutor.execute(new Runnable() { @Override public void run() {
+                ShizukuFpsBridge.applyFlashQuality(new ShizukuFpsBridge.Result() {
+                    @Override public void done(final boolean ok, final String message) {
+                        runOnUiThread(new Runnable() { @Override public void run() {
+                            if (web != null) web.evaluateJavascript("window.onFlashQualityResult(" + ok + "," + org.json.JSONObject.quote(message) + ")", null);
+                        }});
+                    }
+                });
+            }});
+            return "pending";
+        }
         @android.webkit.JavascriptInterface public boolean pubgInstalled() {
             try {
                 getPackageManager().getPackageInfo("com.tencent.ig", 0);
