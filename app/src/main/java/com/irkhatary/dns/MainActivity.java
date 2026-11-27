@@ -176,13 +176,21 @@ public class MainActivity extends Activity {
             else if ("ultra".equalsIgnoreCase(quality)) file = "ActiveULTRA.sav";
             else if ("uhd".equalsIgnoreCase(quality)) file = "ActiveUHD.sav";
             else throw new IllegalArgumentException("کیفیت انتخاب‌شده معتبر نیست");
-            java.io.InputStream in = getAssets().open("profiles/" + file);
+            java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(getAssets().open("profiles.zip"));
             try {
-                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-                byte[] buffer = new byte[8192]; int n;
-                while ((n = in.read(buffer)) != -1) out.write(buffer, 0, n);
-                return out.toByteArray();
-            } finally { in.close(); }
+                java.util.zip.ZipEntry entry;
+                while ((entry = zip.getNextEntry()) != null) {
+                    if (("profiles/" + file).equals(entry.getName())) {
+                        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                        byte[] buffer = new byte[8192]; int n;
+                        while ((n = zip.read(buffer)) != -1) out.write(buffer, 0, n);
+                        zip.closeEntry();
+                        return out.toByteArray();
+                    }
+                    zip.closeEntry();
+                }
+                throw new java.io.FileNotFoundException("profiles/" + file + " در profiles.zip نیست");
+            } finally { zip.close(); }
         }
         @android.webkit.JavascriptInterface public String applyPubgRenderQuality(final String version, final String quality) {
             if (shizukuStatus().equals("denied")) return "ابتدا مجوز Shizuku را بده";
