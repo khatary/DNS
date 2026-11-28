@@ -401,7 +401,7 @@ function gfxApplyFlashQuality(){
  else if(typeof r==='string'&&r&&r!=='pending'){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText=r}
 }
 window.onFlashQualityResult=function(ok,msg){
- if(!ok){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText=msg||'اعمال کیفیت Flash ناموفق بود';gfxReset();return}
+ if(!ok){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText=msg||t('اعمال کیفیت Flash ناموفق بود','Failed to apply Flash quality','فشل تطبيق جودة Flash');gfxReset();return}
  gfxFileReady=false;$('gfxRes').style.color='#b8c5ff';$('gfxRes').innerText='کیفیت Flash ثبت شد؛ در حال اعمال FPS…';
  gfxStartSelectedFps();
 };
@@ -414,11 +414,11 @@ function gfxQualityChanged(){
 }
 function gfxStartSelectedFps(){
  var r=gfxCall('applyPubgFps',[selectedGfxFps,$('gfxGameVersion').value]);
- if(r===undefined)window.onFpsResult(false,'پل Shizuku در این نسخه در دسترس نیست.');
+ if(r===undefined)window.onFpsResult(false,t('پل Shizuku در این نسخه در دسترس نیست.','Shizuku bridge is unavailable in this app version.','واجهة Shizuku غير متاحة في هذا الإصدار.'));
  else if(typeof r==='string'&&r&&r!=='pending')window.onFpsResult(false,r);
 }
 window.onRenderQualityResult=function(ok,msg){
- if(!ok){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText=msg||'اعمال کیفیت ناموفق بود';gfxReset();return}
+ if(!ok){gfxBusy=false;$('gfxRes').style.color='#ff667a';$('gfxRes').innerText=msg||t('اعمال کیفیت ناموفق بود','Failed to apply graphics quality','فشل تطبيق جودة الرسومات');gfxReset();return}
  try{localStorage.setItem('irkhatary_gfx_quality',$('gfxQuality').value)}catch(e){}
  gfxFileReady=false;
  $('gfxRes').style.color='#b8c5ff';$('gfxRes').innerText='کیفیت ثبت شد؛ در حال اعمال FPS…';
@@ -466,22 +466,22 @@ function openGfx(){$('gfxPage').classList.add('show');$('gfxRes').innerText='';t
 function closeGfx(){$('gfxPage').classList.remove('show')}
 function gfxPermission(){gfxCall('requestShizuku');setTimeout(gfxRefresh,700);setTimeout(gfxRefresh,1800);setTimeout(gfxRefresh,3500)}
 function gfxCheckFile(){
- if(gfxCall('shizukuStatus')!=='granted'){gfxFileReady=false;gfxRefresh();showError('ابتدا Shizuku را اجرا و مجوز IR_Khatary را بده.');return}
+ if(gfxCall('shizukuStatus')!=='granted'){gfxFileReady=false;gfxRefresh();showError(t('ابتدا Shizuku را اجرا و مجوز IR_Khatary را بده.','Start Shizuku and grant IR_Khatary permission first.','ابدأ Shizuku وامنح IR_Khatary الإذن أولاً.'));return}
  gfxFileReady=false;$('gfxFile').className='bad';$('gfxFile').innerText=t('در حال بررسی…','Checking…','جارٍ التحقق…');$('gfxRes').innerText='';
  var r=gfxCall('checkPubgSave',[$('gfxGameVersion').value]);
- if(r===undefined){window.onFpsFileCheck(false,'نسخه برنامه از بررسی فایل پشتیبانی نمی‌کند.')}
+ if(r===undefined){window.onFpsFileCheck(false,t('نسخه برنامه از بررسی فایل پشتیبانی نمی‌کند.','This app version does not support file checking.','إصدار التطبيق لا يدعم فحص الملفات.'))}
  else if(typeof r==='string'&&r&&r!=='pending'){window.onFpsFileCheck(false,r)}
 }
 window.onFpsFileCheck=function(ok,msg){
  gfxFileReady=!!ok;gfxFileMessage=msg||'';
  $('gfxFile').className=ok?'ok':'bad';$('gfxFile').innerText=ok?t('دسترسی تأیید شد','Access verified','تم التحقق من الوصول'):t('دسترسی ناموفق','Access failed','فشل الوصول');
- $('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?'فایل قابل خواندن است.':'فایل قابل دسترسی نیست.');
+ $('gfxRes').style.color=ok?'#2effa7':'#ff667a';$('gfxRes').innerText=msg||(ok?t('فایل قابل خواندن است.','File is readable.','الملف قابل للقراءة.'):t('فایل قابل دسترسی نیست.','File cannot be accessed.','لا يمكن الوصول إلى الملف.'));
  gfxRefresh()
 }
 window.onShizukuPermissionResult=function(ok,reason){
  gfxRefresh();
- if(ok){showError('مجوز Shizuku دریافت شد؛ در حال بررسی فایل PUBG…');gfxCheckFile()}
- else if(reason==='unavailable')showError('Shizuku نصب یا Start نیست. Shizuku رسمی را باز کن، Start را بزن و سپس به برنامه برگرد و مجوز را دوباره بگیر.')
+ if(ok){showError(t('مجوز Shizuku دریافت شد؛ در حال بررسی فایل PUBG…','Shizuku permission granted; checking PUBG files…','تم منح إذن Shizuku؛ جارٍ فحص ملفات ببجي…'));gfxCheckFile()}
+ else if(reason==='unavailable')showError(t('Shizuku نصب یا Start نیست. Shizuku رسمی را باز کن، Start را بزن و سپس به برنامه برگرد و مجوز را دوباره بگیر.','Shizuku is not installed or running. Open Shizuku, tap Start, return to the app, and grant permission.','Shizuku غير مثبت أو غير قيد التشغيل. افتحه واضغط Start ثم ارجع إلى التطبيق وامنح الإذن.'))
 }
 function gfxReset(){var k=$('gfxKnob');k.style.transition='left .25s';k.style.left='5px';$('gfxFill').style.width='0';$('gfxTrack').classList.remove('done');$('gfxLabel').innerText=t('بکش به سمت راست »','Drag to the right »','اسحب إلى اليمين »')}
 window.onFpsResult=function(ok,msg){
@@ -505,7 +505,7 @@ window.onFpsResult=function(ok,msg){
    var r;
    if($('gfxQuality').value==='flash')r=gfxCall('applyPubgFlashQuality',[$('gfxGameVersion').value]);
    else r=gfxCall('applyPubgRenderQuality',[$('gfxGameVersion').value,$('gfxQuality').value]);
-   if(r===undefined)window.onRenderQualityResult(false,'پل اعمال کیفیت در این نسخه در دسترس نیست.');
+   if(r===undefined)window.onRenderQualityResult(false,t('پل اعمال کیفیت در این نسخه در دسترس نیست.','Graphics quality bridge is unavailable in this app version.','واجهة جودة الرسومات غير متاحة في هذا الإصدار.'));
    else if(typeof r==='string'&&r&&r!=='pending')window.onRenderQualityResult(false,r)
   }else gfxReset()
  }
